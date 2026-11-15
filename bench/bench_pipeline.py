@@ -8,10 +8,11 @@ from curation_lab.pipeline import PipelineConfig, run
 
 DATA_DIR = os.environ.get("DATA_DIR", "bench/data")
 REPEAT = os.environ.get("REPEAT", "0")
+NEAR_DEDUP = os.environ.get("NEAR_DEDUP", "1") != "0"
 
 config = PipelineConfig(
     filters=FilterConfig(min_chars=50),
-    near_dedup=True,
+    near_dedup=NEAR_DEDUP,
     num_perm=128,
     bands=16,
     rows=8,

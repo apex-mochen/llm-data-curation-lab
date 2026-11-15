@@ -82,17 +82,23 @@ Synthetic corpus: 20,000 documents × 100 whitespace tokens, 50% unique, 25%
 exact duplicates, 15% one-token near duplicates, 10% benchmark copies.
 Three fresh processes; identical corpus; `bench/bench_pipeline.py`.
 
-| Input | Exact dups | Near dups | Contaminated | Output | Docs/s | Peak RSS |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 20,000 | 6,950 | 2,962 | 50 | 10,038 | 7,506–7,751 | 68.8 MiB |
+| Variant | Exact dups | Near dups | Output | Docs/s | Peak RSS |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| exact only (`NEAR_DEDUP=0`) | 6,950 | 0 | 13,000 | 11,518–11,842 | 40.7 MiB |
+| exact + MinHash-LSH | 6,950 | 2,962 | 10,038 | 7,506–7,751 | 68.8 MiB |
+
+The near-dedup stage removes a further 2,962 documents (22.8% of the exact-only
+output) at a cost of about +53% wall time and +28 MiB peak RSS. That is the
+trade-off a curation pipeline has to make explicitly; both variants are
+measured on the same corpus.
 
 Standalone MinHash-LSH benchmark (`bench/bench_dedup.py`): 10k docs at
 ~12.7k docs/s (72 MiB), 50k docs at ~12.9k docs/s (176 MiB). The end-to-end
 pipeline is slower because it also parses JSON, runs filters, decontaminates,
 and writes output.
 
-Raw files: `bench/pipeline_results.jsonl`, `bench/results.jsonl`,
-`bench/pipeline.err`, `bench/bench.err`.
+Raw files: `bench/pipeline_results.jsonl`, `bench/pipeline_exact_only.jsonl`,
+`bench/results.jsonl`, `bench/pipeline.err`, `bench/bench.err`.
 
 ## What this does not prove
 
