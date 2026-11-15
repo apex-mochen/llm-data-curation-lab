@@ -4,5 +4,6 @@ tests/_tmp_*/
 bench/data/
 bench/real_corpus/
 bench/public_corpus/
+bench/public_corpus_full/
 bench/hf_cache/
 bench/*.err
