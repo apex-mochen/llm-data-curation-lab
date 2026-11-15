@@ -5,7 +5,7 @@ import json
 
 from .filters import FilterConfig
 from .lsh_params import optimal_lsh_params
-from .mixing import MixSource, mix_jsonl, mix_jsonl_temperature
+from .mixing import MixSource, mix_jsonl, mix_jsonl_quality, mix_jsonl_temperature
 from .pipeline import PipelineConfig, run
 
 
@@ -73,6 +73,14 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="use DoReMi-style p_i ∝ count_i**alpha instead of explicit weights",
     )
+    mix_parser.add_argument(
+        "--quality",
+        type=float,
+        action="append",
+        default=None,
+        help="per-source quality score, same order as --input; enables quality weighting",
+    )
+    mix_parser.add_argument("--quality-beta", type=float, default=1.0)
     mix_parser.add_argument("--stats", default=None)
 
     lsh_parser = sub.add_parser("lsh-params", help="choose LSH bands/rows for a Jaccard threshold")
@@ -82,7 +90,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv=None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
     if args.command == "run":
         config = PipelineConfig(
             filters=FilterConfig(min_chars=args.min_chars, max_chars=args.max_chars),
@@ -95,7 +104,21 @@ def main(argv=None) -> int:
         )
         stats = run(args.input, args.output, eval_path=args.eval, config=config, limit=args.limit)
     elif args.command == "mix":
-        if args.temperature is not None:
+        if args.quality is not None:
+            if len(args.quality) != len(args.input):
+                parser.error("--quality must be given once per --input")
+            for source, quality in zip(args.input, args.quality):
+                source.quality = quality
+            alpha = args.temperature if args.temperature is not None else 1.0
+            stats = mix_jsonl_quality(
+                args.input,
+                args.output,
+                args.total,
+                alpha=alpha,
+                beta=args.quality_beta,
+                seed=args.seed,
+            )
+        elif args.temperature is not None:
             stats = mix_jsonl_temperature(args.input, args.output, args.total, args.temperature, seed=args.seed)
         else:
             stats = mix_jsonl(args.input, args.output, args.total, seed=args.seed)

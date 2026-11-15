@@ -124,6 +124,13 @@ this is why the pipeline applies exact/near dedup after mixing.
 p_i ∝ count_i**alpha * quality_i**beta
 ```
 
+```bash
+python -m curation_lab.cli mix \
+  --input source_a.jsonl:1 --input source_b.jsonl:1 \
+  --quality 1.0 --quality 0.25 \
+  --total 400 --output mixed.jsonl
+```
+
 With the same 10/90 setup, source B quality 0.25, `alpha=1`, 400 documents:
 
 | beta | Quotas (A, B) | B copy docs | Unique texts |
