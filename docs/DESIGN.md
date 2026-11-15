@@ -100,6 +100,10 @@ the per-document transient allocation, which is what causes long-tail OOMs.
 - Temperature mode uses `p_i ∝ count_i ** alpha`: `alpha=0` uniform, `alpha=1`
   proportional, `0 < alpha < 1` upweights small sources. Source counts are
   streamed before sampling.
+- Quality-aware temperature mode uses
+  `p_i ∝ count_i ** alpha * quality_i ** beta`. `beta=0` is the plain
+  temperature mix; `quality` is a caller-supplied score, not measured by the
+  lab.
 - Each source contributes a uniform reservoir sample of its quota; the reservoir
   is seeded per source, so the mix is reproducible.
 - A source shorter than its quota underfills; the remainder is not

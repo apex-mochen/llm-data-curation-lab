@@ -16,7 +16,8 @@ from typing import Dict, List, Optional, Tuple
 @dataclass
 class MixSource:
     path: str
-    weight: float
+    weight: float = 1.0
+    quality: float = 1.0
 
 
 def allocate_quotas(weights: List[float], total: int) -> List[int]:
@@ -64,6 +65,35 @@ def temperature_quotas(counts: List[int], total: int, alpha: float) -> List[int]
     if any(count < 0 for count in counts):
         raise ValueError("counts must be non-negative")
     weights = [float(count) ** alpha if count > 0 else 0.0 for count in counts]
+    return allocate_quotas(weights, total)
+
+
+def quality_temperature_quotas(
+    counts: List[int],
+    qualities: List[float],
+    total: int,
+    alpha: float = 1.0,
+    beta: float = 1.0,
+) -> List[int]:
+    """Quality-aware temperature quotas: ``p_i ∝ count_i**alpha * quality_i**beta``.
+
+    ``beta=0`` reduces to :func:`temperature_quotas`; ``beta>0`` shrinks the
+    quota of lower-quality sources. Quality values must be positive.
+    """
+    if alpha < 0 or beta < 0:
+        raise ValueError("alpha and beta must be non-negative")
+    if not counts:
+        raise ValueError("at least one source is required")
+    if len(counts) != len(qualities):
+        raise ValueError("counts and qualities must have the same length")
+    if any(count < 0 for count in counts):
+        raise ValueError("counts must be non-negative")
+    if any(quality <= 0 for quality in qualities):
+        raise ValueError("qualities must be positive")
+    weights = [
+        (float(count) ** alpha) * (float(quality) ** beta) if count > 0 else 0.0
+        for count, quality in zip(counts, qualities)
+    ]
     return allocate_quotas(weights, total)
 
 
@@ -137,3 +167,28 @@ def mix_jsonl_temperature(
     counts = [count_jsonl(source.path) for source in sources]
     quotas = temperature_quotas(counts, total, alpha)
     return _write_quotas(sources, quotas, output_path, seed, {"counts": counts, "alpha": alpha})
+
+
+def mix_jsonl_quality(
+    sources: List[MixSource],
+    output_path: str,
+    total: int,
+    alpha: float = 1.0,
+    beta: float = 1.0,
+    seed: int = 42,
+) -> Dict:
+    """Write a quality-weighted temperature mix.
+
+    Uses ``p_i ∝ count_i**alpha * quality_i**beta``. ``beta=0`` is the plain
+    temperature mix; ``beta>0`` reduces the quota of lower-quality sources.
+    """
+    counts = [count_jsonl(source.path) for source in sources]
+    qualities = [source.quality for source in sources]
+    quotas = quality_temperature_quotas(counts, qualities, total, alpha=alpha, beta=beta)
+    return _write_quotas(
+        sources,
+        quotas,
+        output_path,
+        seed,
+        {"counts": counts, "qualities": qualities, "alpha": alpha, "beta": beta},
+    )

@@ -7,7 +7,9 @@ from curation_lab.mixing import (
     allocate_quotas,
     count_jsonl,
     mix_jsonl,
+    mix_jsonl_quality,
     mix_jsonl_temperature,
+    quality_temperature_quotas,
     reservoir_sample_jsonl,
     temperature_quotas,
 )
@@ -142,3 +144,38 @@ def test_mix_jsonl_temperature_end_to_end():
     assert stats["counts"] == [10, 90]
     assert stats["quotas"] == [3, 7]
     assert stats["output"] == 10
+
+
+def test_quality_beta_zero_matches_temperature():
+    counts = [1000, 200]
+    qualities = [1.0, 0.25]
+    assert quality_temperature_quotas(counts, qualities, 400, alpha=1.0, beta=0.0) == temperature_quotas(
+        counts, 400, 1.0
+    )
+
+
+def test_lower_quality_source_gets_smaller_quota():
+    baseline = temperature_quotas([1000, 200], 400, alpha=1.0)
+    weighted = quality_temperature_quotas([1000, 200], [1.0, 0.25], 400, alpha=1.0, beta=1.0)
+    assert weighted[1] < baseline[1]
+    assert sum(weighted) == 400
+
+
+def test_mix_jsonl_quality_end_to_end():
+    tmp = _tmpdir()
+    good = tmp / "good.jsonl"
+    noisy = tmp / "noisy.jsonl"
+    _write_jsonl(good, 1000, "good")
+    _write_jsonl(noisy, 200, "noisy")
+    output = tmp / "mixed.jsonl"
+    stats = mix_jsonl_quality(
+        [MixSource(str(good), 1.0, 1.0), MixSource(str(noisy), 1.0, 0.25)],
+        str(output),
+        total=400,
+        alpha=1.0,
+        beta=1.0,
+    )
+    assert stats["counts"] == [1000, 200]
+    assert stats["qualities"] == [1.0, 0.25]
+    assert stats["quotas"][1] < 67
+    assert stats["output"] == 400

@@ -40,7 +40,7 @@ curation_lab/
   simhash_dedup.py  pigeonhole-banded SimHash near dedup
   pipeline.py   streaming JSONL pipeline + stats
   cli.py        `curation-lab run ...` / `curation-lab mix ...`
-tests/          48 unit tests (algorithms + end-to-end pipeline)
+tests/          51 unit tests (algorithms + end-to-end pipeline)
 bench/          synthetic corpus generator + benchmark scripts
 docs/DESIGN.md  memory model, algorithm details, limitations
 ```
@@ -115,6 +115,26 @@ which is lower because not every copy's twin is in the sample. Upweighting the
 small source raises copy quota from 35 to 66 to 100 and lowers unique-text yield
 from 387 to 380 to 377. Mixing alone does not fix a duplicate-heavy source;
 this is why the pipeline applies exact/near dedup after mixing.
+
+## Quality-weighted mixing
+
+`mix_jsonl_quality` extends temperature mixing with a per-source quality score:
+
+```text
+p_i ∝ count_i**alpha * quality_i**beta
+```
+
+With the same 10/90 setup, source B quality 0.25, `alpha=1`, 400 documents:
+
+| beta | Quotas (A, B) | B copy docs | Unique texts |
+| ---: | ---: | ---: | ---: |
+| 0.0 (temperature only) | 333, 67 | 35.3 | 387.0 |
+| 1.0 | 381, 19 | 8.0 | 396.0 |
+
+`beta` is a policy knob, not a measured downstream-quality gain: the 0.25 score
+is a synthetic proxy. The experiment only shows that quality weighting can
+reduce quota spent on a duplicate-heavy source without changing the mixing
+machinery.
 
 ## Algorithms
 
@@ -265,11 +285,11 @@ This is a synthetic, single-configuration comparison (100-token documents,
 python -m pytest tests -q
 ```
 
-`48 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`51 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
 transitive vs first-match chain handling, SimHash fingerprints/Hamming, banded
 SimHash dedup, LSH parameter selection, filter boundaries, decontamination
-ratio, weighted and temperature quota allocation + reservoir mixing, and the
+ratio, weighted/temperature/quality quota allocation + reservoir mixing, and the
 full pipeline stats/output.
 
 ## Benchmark
