@@ -2,6 +2,31 @@
 
 All notable changes to `llm-data-curation-lab` are documented here.
 
+## v0.2.0 — 2026-11-16
+
+### Added
+
+- Quality-weighted temperature mixing:
+  `p_i ∝ count_i**alpha * quality_i**beta`.
+- CLI support: `--quality` (one per `--input`) and `--quality-beta`.
+- Quota validation tests for length mismatch and non-positive quality.
+- CLI end-to-end test for quality-weighted mixing.
+- Benchmark comparing `beta=0` (temperature only) with `beta=1` on a
+  duplicate-heavy source.
+
+### Changed
+
+- 54 unit tests (was 48 in v0.1.0).
+- README and DESIGN document the quality-weighted mixing formula, CLI and
+  benchmark caveats.
+
+### Benchmark
+
+10/90 sources, source B quality 0.25, total 400: `beta=0` quotas `[333, 67]`,
+B copy docs 35.3, unique texts 387; `beta=1` quotas `[381, 19]`, B copy docs
+8.0, unique texts 396. The quality score is a synthetic proxy, not a
+downstream training-quality result.
+
 ## v0.1.0 — 2026-11-15
 
 Initial public release.
