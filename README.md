@@ -309,6 +309,24 @@ stays above 0.857. This is a controlled synthetic injection on real text, not a
 measurement of how contaminated a real training corpus is. Raw file:
 `bench/decontam_control/result.json`.
 
+## Decontamination threshold sweep
+
+The same WikiText-2 / GSM8K control (2,000 clean docs, 300 eval questions, 100
+exact + 100 one-word-changed injections) was run across n-gram sizes and
+thresholds:
+
+| n-gram | Threshold | Precision | Recall | Max clean ratio | Min near ratio |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 5 | 0.3 / 0.5 / 0.7 / 0.9 | 1.000 | 1.000 | 0.0204 | 0.933 |
+| 13 | 0.3 / 0.5 / 0.7 | 1.000 | 1.000 | 0.000 | 0.857 |
+| 13 | 0.9 | 1.000 | 0.980 | 0.000 | 0.857 |
+
+Two observations: 13-grams have zero clean overlap on this corpus while 5-grams
+already reach 0.020, and a 0.9 threshold loses 4 of the 100 near copies because
+their ratio is 0.857. Thresholds up to 0.7 are equivalent on this controlled
+set; the sweep is what shows where the choice starts to matter, not a claim that
+one threshold is universally best. Raw file: `bench/decontam_sweep.jsonl`.
+
 ## Cross-check against Data-Juicer
 
 To check that the MinHash-LSH implementation finds the same near-duplicate
