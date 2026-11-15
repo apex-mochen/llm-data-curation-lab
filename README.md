@@ -82,6 +82,12 @@ Synthetic corpus: 20,000 documents × 100 whitespace tokens, 50% unique, 25%
 exact duplicates, 15% one-token near duplicates, 10% benchmark copies.
 Three fresh processes; identical corpus; `bench/bench_pipeline.py`.
 
+```bash
+python bench/make_corpus.py --docs 20000 --tokens 100 --out-dir bench/data
+NEAR_DEDUP=1 python bench/bench_pipeline.py   # exact + near
+NEAR_DEDUP=0 python bench/bench_pipeline.py   # exact only
+```
+
 | Variant | Exact dups | Near dups | Output | Docs/s | Peak RSS |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | exact only (`NEAR_DEDUP=0`) | 6,950 | 0 | 13,000 | 11,518–11,842 | 40.7 MiB |
