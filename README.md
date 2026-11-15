@@ -99,7 +99,7 @@ replace, not a claim that proportional quotas are optimal.
 python -m pytest tests -q
 ```
 
-`29 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`31 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
 transitive vs first-match chain handling, filter boundaries, decontamination
 ratio, weighted quota allocation + reservoir mixing, and the full pipeline
