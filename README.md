@@ -184,6 +184,29 @@ finds none (17/5k and 71/14.3k). Raw files:
 `bench/public_pipeline_results.jsonl`, `bench/public_full_pipeline_results.jsonl`.
 The corpus is downloaded at run time and is not committed.
 
+## Decontamination control (WikiText-2 + GSM8K)
+
+A positive/negative control for the decontamination stage, using real public
+data: 2,000 clean WikiText-2 documents as the corpus, 300 GSM8K test questions
+as the reference set, and 100 exact + 100 one-word-changed GSM8K questions
+injected into the corpus.
+
+```bash
+python bench/bench_decontam_control.py \
+  --wikitext-corpus bench/public_corpus/corpus.jsonl \
+  --out-dir bench/decontam_control --n-eval 300 --n-inject 100 --n-clean 2000
+```
+
+| Clean docs | Eval questions | Injected exact | Injected near | Index 13-grams | Precision | Recall | Max clean ratio | Min near ratio |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2,000 | 300 | 100 | 100 | 10,146 | 1.0 | 1.0 | 0.0 | 0.857 |
+
+The control shows the intended behavior: no clean WikiText document reaches the
+0.5 threshold, every exact copy has ratio 1.0, and every one-word-changed copy
+stays above 0.857. This is a controlled synthetic injection on real text, not a
+measurement of how contaminated a real training corpus is. Raw file:
+`bench/decontam_control/result.json`.
+
 ## Cross-check against Data-Juicer
 
 To check that the MinHash-LSH implementation finds the same near-duplicate

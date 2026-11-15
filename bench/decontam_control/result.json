@@ -1,0 +1,17 @@
+{
+  "clean_docs": 2000,
+  "eval_questions": 300,
+  "injected_exact": 100,
+  "injected_near": 100,
+  "index_ngrams": 10146,
+  "ngram": 13,
+  "threshold": 0.5,
+  "tp": 200,
+  "fp": 0,
+  "fn": 0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "max_clean_ratio": 0.0,
+  "min_exact_ratio": 1.0,
+  "min_near_ratio": 0.857143
+}
