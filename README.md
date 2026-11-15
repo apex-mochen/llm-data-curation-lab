@@ -220,6 +220,24 @@ Raw files: `bench/pipeline_results_fixed.jsonl`,
 `bench/pipeline_results_simhash_h3.jsonl`,
 `bench/pipeline_results_simhash_h8.jsonl`.
 
+### Real WikiText-2 (14,324 docs)
+
+| Algorithm | Near dups | Output | Docs/s | Peak RSS |
+| --- | ---: | ---: | ---: | ---: |
+| MinHash 16×8 | 71 | 14,247 | 4,476.6 | 78.9 MiB |
+| SimHash H=3 | 125 | 14,193 | 725.8 | 47.7 MiB |
+| SimHash H=8 | 13,280 | 1,038 | 1,264.4 | 41.7 MiB |
+
+On real text, H=3 removes more documents than MinHash (125 vs 71) and is about
+6× slower; H=8 removes 93% of the corpus. SimHash's lower memory does not
+compensate for the speed and threshold sensitivity, so MinHash remains the
+default. This also shows why a synthetic threshold sweep is not enough: the
+same H=3 behaves differently on real borderline pairs.
+
+Raw files: `bench/pipeline_results_wikitext_full_minhash.jsonl`,
+`bench/pipeline_results_wikitext_full_simhash_h3.jsonl`,
+`bench/pipeline_results_wikitext_full_simhash_h8.jsonl`.
+
 ## MinHash vs SimHash (quality)
 
 `bench/bench_dedup_quality.py` builds 1,000 labeled pairs (200 base documents ×
