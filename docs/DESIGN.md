@@ -72,6 +72,17 @@ the per-document transient allocation, which is what causes long-tail OOMs.
 - A document is dropped when `matched / total >= threshold`.
 - Documents shorter than `n` have ratio 0 and are kept.
 
+## Data mixing details
+
+- Quotas are proportional to source weights; the integer remainder is assigned
+  by largest fractional part, with source order as the deterministic tie-breaker.
+- Each source contributes a uniform reservoir sample of its quota; the reservoir
+  is seeded per source, so the mix is reproducible.
+- A source shorter than its quota underfills; the remainder is not
+  redistributed in v1.
+- Memory is O(total output documents) because each source's reservoir is held
+  before writing. This is a batch mixing stage, not a streaming one.
+
 ## Benchmark methodology
 
 - One document per fresh process; RSS sampled every 2 ms with `psutil`.

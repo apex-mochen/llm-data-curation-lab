@@ -32,9 +32,10 @@ curation_lab/
   dedup.py      ExactDedup + MinHashLSHDedup
   filters.py    length / alpha / symbol / repeated-line filters
   decontam.py   n-gram overlap against an evaluation set
+  mixing.py     weighted quotas + per-source reservoir sampling
   pipeline.py   streaming JSONL pipeline + stats
-  cli.py        `curation-lab run ...`
-tests/          21 unit tests (algorithms + end-to-end pipeline)
+  cli.py        `curation-lab run ...` / `curation-lab mix ...`
+tests/          29 unit tests (algorithms + end-to-end pipeline)
 bench/          synthetic corpus generator + benchmark scripts
 docs/DESIGN.md  memory model, algorithm details, limitations
 ```
@@ -58,6 +59,24 @@ Input/output are JSONL with a `text` field (configurable in
 memory, but the exact-hash set and LSH band buckets do grow with the number of
 kept documents.
 
+## Data mixing
+
+```bash
+python -m curation_lab.cli mix \
+  --input code.jsonl:0.5 \
+  --input web.jsonl:0.3 \
+  --input math.jsonl:0.2 \
+  --output mixed.jsonl \
+  --total 100000
+```
+
+Quotas are allocated proportionally with deterministic remainder handling; each
+source contributes a uniform reservoir sample of its quota, seeded per source.
+Sources shorter than their quota underfill (the remainder is not redistributed
+in v1). Memory is O(total output documents) because the reservoir is held
+before writing. This is the baseline a temperature/DoReMi-style sampler would
+replace, not a claim that proportional quotas are optimal.
+
 ## Algorithms
 
 - **Exact dedup**: BLAKE2b-128 of the NFKC-normalized text; first occurrence wins.
@@ -67,6 +86,9 @@ kept documents.
   `O(num_perm)` memory regardless of document length.
 - **LSH**: 16 bands × 8 rows (approximate Jaccard threshold 0.66). A document
   is a near duplicate if any band bucket already contains its band key.
+  `transitive=True` (default) also records keys from dropped documents, so the
+  result is the connected components of the band graph; `transitive=False`
+  compares only against kept documents (first-match).
 - **Decontamination**: BLAKE2b-64 hashes of 13-grams from the reference set;
   a document is dropped when the fraction of its n-grams present in the
   reference set is at least the threshold (default 0.5).
@@ -77,10 +99,11 @@ kept documents.
 python -m pytest tests -q
 ```
 
-`23 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`29 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
 transitive vs first-match chain handling, filter boundaries, decontamination
-ratio, and the full pipeline stats/output.
+ratio, weighted quota allocation + reservoir mixing, and the full pipeline
+stats/output.
 
 ## Benchmark
 
