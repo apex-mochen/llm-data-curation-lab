@@ -134,6 +134,31 @@ real Markdown/Python text (including Chinese docs and code punctuation), and
 that near-dedup finds 99 similar documents where exact hashing finds none.
 Raw file: `bench/real_pipeline_results.jsonl`.
 
+## Cross-check against Data-Juicer
+
+To check that the MinHash-LSH implementation finds the same near-duplicate
+population as a mature implementation, both were run on the same 13,000
+exact-deduplicated documents with 128 permutations, 16 bands × 8 rows and
+5-word shingles:
+
+```bash
+LIMIT=13000 VARIANT=ours python bench/compare_dj_minhash.py
+LIMIT=13000 VARIANT=dj   python bench/compare_dj_minhash.py
+```
+
+| Implementation | Removed | Docs/s | Peak RSS |
+| --- | ---: | ---: | ---: |
+| lab `MinHashLSHDedup` | 2,962 | 12,837 | 78.8 MiB |
+| Data-Juicer `document_minhash_deduplicator` | 3,000 | 2,129 | 302.7 MiB |
+
+The removal counts agree within 1.3%. The 38-document difference is expected:
+Data-Juicer clusters transitively and keeps the first document of each cluster,
+while the lab compares each document only against already-kept documents.
+Throughput and RSS are **not** directly comparable: the Data-Juicer run also
+builds an Arrow dataset and runs its `process()` clustering stage. The useful
+signal is the near-identical duplicate population, not a speed ranking.
+Raw file: `bench/compare_results.jsonl`.
+
 ## What this does not prove
 
 - Synthetic corpus only; no real FineWeb/C4 sample yet, no downstream model
