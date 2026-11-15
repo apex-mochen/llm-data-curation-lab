@@ -106,6 +106,29 @@ and writes output.
 Raw files: `bench/pipeline_results.jsonl`, `bench/pipeline_exact_only.jsonl`,
 `bench/results.jsonl`, `bench/pipeline.err`, `bench/bench.err`.
 
+## Real-text check (local OSS corpus)
+
+To exercise the pipeline on real text without network access, the corpus below
+is built from the public Data-Juicer repository's `.md` / `.txt` / `.py` files:
+
+```bash
+python bench/make_repo_corpus.py \
+  --root /path/to/data-juicer \
+  --out-dir bench/real_corpus \
+  --exts .md .txt .py
+DATA_DIR=bench/real_corpus EVAL=none NEAR_DEDUP=1 python bench/bench_pipeline.py
+```
+
+| Docs | Chars | Filtered | Exact dups | Near dups | Output | Docs/s | Peak RSS |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1,177 | 12.0 M | 72 low-alpha + 2 too-long | 0 | 99 | 1,004 | 670–697 | 57–59 MiB |
+
+This is a convenience sample of one public repository, not a public benchmark
+and not a claim about web-scale data. It does show that the pipeline handles
+real Markdown/Python text (including Chinese docs and code punctuation), and
+that near-dedup finds 99 similar documents where exact hashing finds none.
+Raw file: `bench/real_pipeline_results.jsonl`.
+
 ## What this does not prove
 
 - Synthetic corpus only; no real FineWeb/C4 sample yet, no downstream model

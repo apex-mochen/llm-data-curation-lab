@@ -2,4 +2,5 @@ __pycache__/
 .pytest_cache/
 tests/_tmp_*/
 bench/data/
+bench/real_corpus/
 bench/*.err
