@@ -68,3 +68,38 @@ def test_cli_mix_end_to_end():
     assert code == 0
     with open(output, encoding="utf-8") as fin:
         assert len([line for line in fin if line.strip()]) == 6
+
+
+def test_cli_quality_mix_end_to_end():
+    tmp = _tmpdir()
+    a = tmp / "a.jsonl"
+    b = tmp / "b.jsonl"
+    output = tmp / "mixed.jsonl"
+    stats_path = tmp / "stats.json"
+    _write_jsonl(a, [{"id": f"a-{i}"} for i in range(10)])
+    _write_jsonl(b, [{"id": f"b-{i}"} for i in range(10)])
+    code = main(
+        [
+            "mix",
+            "--input",
+            f"{a}:1.0",
+            "--input",
+            f"{b}:1.0",
+            "--quality",
+            "1.0",
+            "--quality",
+            "0.25",
+            "--output",
+            str(output),
+            "--total",
+            "10",
+            "--stats",
+            str(stats_path),
+        ]
+    )
+    assert code == 0
+    with open(stats_path, encoding="utf-8") as fin:
+        stats = json.load(fin)
+    assert stats["quotas"] == [8, 2]
+    assert stats["qualities"] == [1.0, 0.25]
+    assert stats["beta"] == 1.0
