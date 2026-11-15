@@ -5,8 +5,11 @@ import uuid
 from curation_lab.mixing import (
     MixSource,
     allocate_quotas,
+    count_jsonl,
     mix_jsonl,
+    mix_jsonl_temperature,
     reservoir_sample_jsonl,
+    temperature_quotas,
 )
 
 
@@ -100,3 +103,42 @@ def test_mix_jsonl_underfills_short_source():
     stats = mix_jsonl([MixSource(str(path), 1.0)], str(output), total=5)
     assert stats["output"] == 2
     assert stats["written"] == [2]
+
+
+def test_count_jsonl_skips_blank_lines():
+    tmp = _tmpdir()
+    path = tmp / "a.jsonl"
+    _write_jsonl(path, 7, "a")
+    with open(path, "a", encoding="utf-8") as fout:
+        fout.write("\n")
+    assert count_jsonl(str(path)) == 7
+
+
+def test_temperature_quotas_endpoints():
+    assert temperature_quotas([100, 300], total=40, alpha=1.0) == [10, 30]
+    assert temperature_quotas([100, 300], total=40, alpha=0.0) == [20, 20]
+
+
+def test_temperature_alpha_below_one_upweights_small_source():
+    proportional = temperature_quotas([10, 90], total=10, alpha=1.0)
+    tempered = temperature_quotas([10, 90], total=10, alpha=0.5)
+    assert sum(tempered) == 10
+    assert tempered[0] > proportional[0]
+
+
+def test_mix_jsonl_temperature_end_to_end():
+    tmp = _tmpdir()
+    small = tmp / "small.jsonl"
+    large = tmp / "large.jsonl"
+    _write_jsonl(small, 10, "small")
+    _write_jsonl(large, 90, "large")
+    output = tmp / "mixed.jsonl"
+    stats = mix_jsonl_temperature(
+        [MixSource(str(small), 1.0), MixSource(str(large), 1.0)],
+        str(output),
+        total=10,
+        alpha=0.5,
+    )
+    assert stats["counts"] == [10, 90]
+    assert stats["quotas"] == [3, 7]
+    assert stats["output"] == 10

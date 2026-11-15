@@ -39,7 +39,7 @@ curation_lab/
   simhash.py    64-bit SimHash fingerprints + Hamming distance
   pipeline.py   streaming JSONL pipeline + stats
   cli.py        `curation-lab run ...` / `curation-lab mix ...`
-tests/          35 unit tests (algorithms + end-to-end pipeline)
+tests/          42 unit tests (algorithms + end-to-end pipeline)
 bench/          synthetic corpus generator + benchmark scripts
 docs/DESIGN.md  memory model, algorithm details, limitations
 ```
@@ -78,8 +78,22 @@ Quotas are allocated proportionally with deterministic remainder handling; each
 source contributes a uniform reservoir sample of its quota, seeded per source.
 Sources shorter than their quota underfill (the remainder is not redistributed
 in v1). Memory is O(total output documents) because the reservoir is held
-before writing. This is the baseline a temperature/DoReMi-style sampler would
-replace, not a claim that proportional quotas are optimal.
+before writing.
+
+Temperature mixing (`p_i ∝ count_i ** alpha`, DoReMi-style) is available
+without explicit weights:
+
+```bash
+python -m curation_lab.cli mix \
+  --input small.jsonl:1.0 \
+  --input large.jsonl:1.0 \
+  --output mixed.jsonl --total 10 --temperature 0.5
+```
+
+`alpha=0` is uniform, `alpha=1` is proportional to source size, and
+`0 < alpha < 1` upweights smaller sources. For a 10/90 source split and a
+target of 10 documents: `alpha=1` gives `[1, 9]`, `alpha=0.5` gives `[3, 7]`,
+and `alpha=0` gives `[5, 5]`.
 
 ## Algorithms
 
@@ -150,11 +164,12 @@ This is a synthetic, single-configuration comparison (100-token documents,
 python -m pytest tests -q
 ```
 
-`38 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`42 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
 transitive vs first-match chain handling, SimHash fingerprints/Hamming, LSH
-parameter selection, filter boundaries, decontamination ratio, weighted quota
-allocation + reservoir mixing, and the full pipeline stats/output.
+parameter selection, filter boundaries, decontamination ratio, weighted and
+temperature quota allocation + reservoir mixing, and the full pipeline
+stats/output.
 
 ## Benchmark
 

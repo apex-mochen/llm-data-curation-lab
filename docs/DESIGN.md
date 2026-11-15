@@ -97,6 +97,9 @@ the per-document transient allocation, which is what causes long-tail OOMs.
 
 - Quotas are proportional to source weights; the integer remainder is assigned
   by largest fractional part, with source order as the deterministic tie-breaker.
+- Temperature mode uses `p_i ∝ count_i ** alpha`: `alpha=0` uniform, `alpha=1`
+  proportional, `0 < alpha < 1` upweights small sources. Source counts are
+  streamed before sampling.
 - Each source contributes a uniform reservoir sample of its quota; the reservoir
   is seeded per source, so the mix is reproducible.
 - A source shorter than its quota underfills; the remainder is not
