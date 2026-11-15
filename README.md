@@ -167,19 +167,22 @@ loader:
 ```bash
 python bench/make_hf_corpus.py \
   --dataset Salesforce/wikitext --config wikitext-2-raw-v1 \
-  --split train --limit 5000 --min-chars 200 --out-dir bench/public_corpus
-DATA_DIR=bench/public_corpus EVAL=none NEAR_DEDUP=1 python bench/bench_pipeline.py
+  --split train --limit 40000 --min-chars 200 --out-dir bench/public_corpus_full
+DATA_DIR=bench/public_corpus_full EVAL=none NEAR_DEDUP=1 python bench/bench_pipeline.py
 ```
 
-| Docs | Chars | Filtered | Exact dups | Near dups | Output | Docs/s | Peak RSS |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 5,000 | 3.71 M | 4 low-alpha | 0 | 17 | 4,979 | 3,279–3,967 | 65.0–65.3 MiB |
+| Corpus | Docs | Chars | Filtered | Exact dups | Near dups | Output | Docs/s | Peak RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 5k sample | 5,000 | 3.71 M | 4 low-alpha | 0 | 17 | 4,979 | 3,279–3,967 | 65.0–65.3 MiB |
+| full train (≥200 chars) | 14,324 | 10.4 M | 6 low-alpha | 0 | 71 | 14,247 | 3,169–4,086 | 79.2–80.2 MiB |
 
-This is one 5,000-document sample, not a full-corpus or downstream-quality
-claim. It does confirm that the pipeline runs on real Wikipedia text, and that
-near-dedup finds 17 repeated/similar documents where exact hashing finds none.
-Raw file: `bench/public_pipeline_results.jsonl`. The corpus is downloaded at
-run time and is not committed.
+The 14,324 documents are all non-empty rows of the 36,718-row train split with
+at least 200 characters. This is a public-corpus engineering check, not a
+downstream-quality claim. It confirms that the pipeline runs on real Wikipedia
+text and that near-dedup finds repeated/similar documents where exact hashing
+finds none (17/5k and 71/14.3k). Raw files:
+`bench/public_pipeline_results.jsonl`, `bench/public_full_pipeline_results.jsonl`.
+The corpus is downloaded at run time and is not committed.
 
 ## Cross-check against Data-Juicer
 
