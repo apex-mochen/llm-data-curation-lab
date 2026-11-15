@@ -32,6 +32,12 @@ class MinHashLSHDedup:
 
     ``bands`` and ``rows`` control the LSH S-curve; the default 16 x 8 on 128
     permutations has an approximate threshold of 0.66.
+
+    With ``transitive=True`` (default), band keys from duplicate documents are
+    also recorded. A later document that only matches an already-dropped
+    document is still removed, so the result is the connected components of the
+    band graph. With ``transitive=False``, documents are compared only against
+    kept documents (first-match), which can keep a chain member.
     """
 
     def __init__(
@@ -42,24 +48,33 @@ class MinHashLSHDedup:
         ngram: int = 5,
         mode: str = "word",
         seed: int = 42,
+        transitive: bool = True,
     ) -> None:
         if bands * rows > num_perm:
             raise ValueError("bands * rows cannot exceed num_perm")
         self.minhash = MinHash(num_perm=num_perm, seed=seed, ngram=ngram, mode=mode)
         self.lsh = LSH(num_perm=num_perm, bands=bands, rows=rows)
         self._buckets: List[Set[bytes]] = self.lsh.buckets()
+        self.transitive = transitive
         self.num_docs = 0
+        self.num_seen = 0
 
     def signature(self, text: str) -> np.ndarray:
         return self.minhash.signature(text)
 
     def check_and_add(self, text: str) -> bool:
-        """Return True when ``text`` collides with an already kept document."""
+        """Return True when ``text`` belongs to an already seen cluster."""
         keys = list(self.lsh.band_keys(self.signature(text)))
-        if any(key in bucket for key, bucket in zip(keys, self._buckets)):
+        duplicate = any(key in bucket for key, bucket in zip(keys, self._buckets))
+        if duplicate and not self.transitive:
             return True
+        # Record keys for duplicates too when clustering transitively, so a
+        # later document can chain through an already-dropped document.
         for key, bucket in zip(keys, self._buckets):
             bucket.add(key)
+        self.num_seen += 1
+        if duplicate:
+            return True
         self.num_docs += 1
         return False
 

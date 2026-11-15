@@ -17,6 +17,7 @@ class PipelineConfig:
     text_key: str = "text"
     filters: FilterConfig = field(default_factory=FilterConfig)
     near_dedup: bool = True
+    transitive_dedup: bool = True
     num_perm: int = 128
     bands: int = 16
     rows: int = 8
@@ -77,6 +78,7 @@ def run(
             rows=config.rows,
             ngram=config.ngram,
             mode=config.mode,
+            transitive=config.transitive_dedup,
         )
         if config.near_dedup
         else None

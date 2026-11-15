@@ -77,9 +77,10 @@ kept documents.
 python -m pytest tests -q
 ```
 
-`21 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`23 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
-filter boundaries, decontamination ratio, and the full pipeline stats/output.
+transitive vs first-match chain handling, filter boundaries, decontamination
+ratio, and the full pipeline stats/output.
 
 ## Benchmark
 
@@ -148,12 +149,16 @@ LIMIT=13000 VARIANT=dj   python bench/compare_dj_minhash.py
 
 | Implementation | Removed | Docs/s | Peak RSS |
 | --- | ---: | ---: | ---: |
-| lab `MinHashLSHDedup` | 2,962 | 12,837 | 78.8 MiB |
-| Data-Juicer `document_minhash_deduplicator` | 3,000 | 2,129 | 302.7 MiB |
+| lab `MinHashLSHDedup` | 2,962 | 12,451 | 79.7 MiB |
+| Data-Juicer `document_minhash_deduplicator` | 3,000 | 2,046 | 302.8 MiB |
 
-The removal counts agree within 1.3%. The 38-document difference is expected:
-Data-Juicer clusters transitively and keeps the first document of each cluster,
-while the lab compares each document only against already-kept documents.
+The removal counts agree within 1.3%. The 38-document difference is consistent
+with hash/LSH randomness: the lab hashes shingles with CRC32 and Data-Juicer
+uses SHA-1, so borderline pairs can fall on different sides of the band
+collision. It is not evidence of a semantic gap. The lab also supports
+transitive clustering (`transitive=True`, the default); on this corpus it gives
+the same 2,962 removals as first-match because there are no chain cases, but it
+is covered by a dedicated chain test.
 Throughput and RSS are **not** directly comparable: the Data-Juicer run also
 builds an Arrow dataset and runs its `process()` clustering stage. The useful
 signal is the near-identical duplicate population, not a speed ranking.

@@ -34,7 +34,7 @@ filter stage allocates only per-document objects.
 | State | Grows with | Bound |
 | --- | --- | --- |
 | exact hash set | number of kept documents | 16 B + set overhead per doc |
-| LSH band buckets | number of kept documents × bands | 8 B × rows + bytes overhead per band key |
+| LSH band buckets | number of kept documents (first-match) or all documents (transitive) × bands | 8 B × rows + bytes overhead per band key |
 | MinHash signature | `num_perm` | O(1) per document |
 | shingle folding block | block size | 4,096 hashes |
 | decontam index | reference n-grams | 8 B per unique n-gram |
@@ -57,8 +57,11 @@ the per-document transient allocation, which is what causes long-tail OOMs.
 
 - 16 bands × 8 rows on 128 permutations; approximate threshold
   `(1/16)^(1/8) ≈ 0.66`.
-- A document is a near duplicate if any band key already exists. The first
-  document is kept (stable order).
+- `transitive=True` (default) records band keys for duplicate documents too, so
+  a later document that only matches an already-dropped document is still
+  removed (connected components). `transitive=False` compares only against kept
+  documents (first-match), which can keep a chain member.
+- The first document of a cluster is kept (stable order).
 - Band keys are raw signature slices (`bytes`), not Python tuples, to keep the
   bucket memory predictable.
 
