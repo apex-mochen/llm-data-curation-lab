@@ -40,7 +40,7 @@ curation_lab/
   simhash_dedup.py  pigeonhole-banded SimHash near dedup
   pipeline.py   streaming JSONL pipeline + stats
   cli.py        `curation-lab run ...` / `curation-lab mix ...`
-tests/          52 unit tests (algorithms + end-to-end pipeline)
+tests/          54 unit tests (algorithms + end-to-end pipeline)
 bench/          synthetic corpus generator + benchmark scripts
 docs/DESIGN.md  memory model, algorithm details, limitations
 ```
@@ -292,7 +292,7 @@ This is a synthetic, single-configuration comparison (100-token documents,
 python -m pytest tests -q
 ```
 
-`52 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`54 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
 transitive vs first-match chain handling, SimHash fingerprints/Hamming, banded
 SimHash dedup, LSH parameter selection, filter boundaries, decontamination

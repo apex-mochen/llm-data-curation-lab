@@ -179,3 +179,19 @@ def test_mix_jsonl_quality_end_to_end():
     assert stats["qualities"] == [1.0, 0.25]
     assert stats["quotas"][1] < 67
     assert stats["output"] == 400
+
+
+def test_quality_length_mismatch_raises():
+    try:
+        quality_temperature_quotas([100, 200], [1.0], 10)
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError")
+
+
+def test_quality_must_be_positive():
+    try:
+        quality_temperature_quotas([100, 200], [1.0, 0.0], 10)
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError")
