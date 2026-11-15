@@ -327,6 +327,26 @@ their ratio is 0.857. Thresholds up to 0.7 are equivalent on this controlled
 set; the sweep is what shows where the choice starts to matter, not a claim that
 one threshold is universally best. Raw file: `bench/decontam_sweep.jsonl`.
 
+## Real-corpus LSH quality (WikiText-2)
+
+`bench/bench_dedup_real.py` repeats the LSH banding evaluation on real
+WikiText-2 documents: 200 base documents × exact / one-word / five-word change /
+unrelated = 800 pairs, with exact 5-gram Jaccard ≥ 0.7 as ground truth (600
+duplicates).
+
+| Bands × rows | S-curve | Precision | Recall | F1 |
+| ---: | ---: | ---: | ---: | ---: |
+| 8 × 16 | 0.878 | 1.000 | 0.948 | 0.973 |
+| 12 × 10 | 0.780 | 1.000 | 0.957 | 0.978 |
+| 16 × 8 | 0.707 | 1.000 | 0.965 | 0.982 |
+| 25 × 5 | 0.525 | 1.000 | 0.982 | 0.991 |
+
+The ordering matches the synthetic set, and all configurations keep precision
+at 1.0 because the injected changes are still high-overlap. The 25 × 5 row is
+the best on this controlled set, but its lower S-curve threshold can trade
+precision for recall on a corpus with genuinely borderline pairs; this is a
+sanity check, not a universal recommendation.
+
 ## Cross-check against Data-Juicer
 
 To check that the MinHash-LSH implementation finds the same near-duplicate

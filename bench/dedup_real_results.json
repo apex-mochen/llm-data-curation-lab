@@ -1,0 +1,53 @@
+{
+  "corpus": "bench/public_corpus/corpus.jsonl",
+  "documents": 400,
+  "pairs": 800,
+  "duplicates_by_true_jaccard": 600,
+  "threshold": 0.7,
+  "configs": [
+    {
+      "tp": 569,
+      "fp": 0,
+      "fn": 31,
+      "precision": 1.0,
+      "recall": 0.948333,
+      "f1": 0.973482,
+      "bands": 8,
+      "rows": 16,
+      "s_curve_threshold": 0.878126
+    },
+    {
+      "tp": 574,
+      "fp": 0,
+      "fn": 26,
+      "precision": 1.0,
+      "recall": 0.956667,
+      "f1": 0.977853,
+      "bands": 12,
+      "rows": 10,
+      "s_curve_threshold": 0.779977
+    },
+    {
+      "tp": 579,
+      "fp": 0,
+      "fn": 21,
+      "precision": 1.0,
+      "recall": 0.965,
+      "f1": 0.982188,
+      "bands": 16,
+      "rows": 8,
+      "s_curve_threshold": 0.707107
+    },
+    {
+      "tp": 589,
+      "fp": 0,
+      "fn": 11,
+      "precision": 1.0,
+      "recall": 0.981667,
+      "f1": 0.990749,
+      "bands": 25,
+      "rows": 5,
+      "s_curve_threshold": 0.525306
+    }
+  ]
+}
