@@ -1,0 +1,42 @@
+{
+  "config": {
+    "source_a_unique": 1000,
+    "source_b_copies": 100,
+    "source_b_unique": 100,
+    "total": 400,
+    "seeds": [
+      1,
+      2,
+      3
+    ]
+  },
+  "results": [
+    {
+      "a_docs": 333.0,
+      "b_docs": 67.0,
+      "b_copy_docs": 35.33,
+      "duplicate_texts": 13.0,
+      "unique_texts": 387.0,
+      "output": 400.0,
+      "alpha": 1.0
+    },
+    {
+      "a_docs": 276.0,
+      "b_docs": 124.0,
+      "b_copy_docs": 66.0,
+      "duplicate_texts": 20.33,
+      "unique_texts": 379.67,
+      "output": 400.0,
+      "alpha": 0.5
+    },
+    {
+      "a_docs": 200.0,
+      "b_docs": 200.0,
+      "b_copy_docs": 100.0,
+      "duplicate_texts": 23.33,
+      "unique_texts": 376.67,
+      "output": 400.0,
+      "alpha": 0.0
+    }
+  ]
+}

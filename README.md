@@ -95,6 +95,26 @@ python -m curation_lab.cli mix \
 target of 10 documents: `alpha=1` gives `[1, 9]`, `alpha=0.5` gives `[3, 7]`,
 and `alpha=0` gives `[5, 5]`.
 
+## Mixing quality (proportional vs temperature)
+
+`bench/bench_mixing_quality.py` mixes 400 documents from a clean 1,000-document
+source A and a 200-document source B whose first 100 records are exact copies of
+A documents. Averages over seeds 1–3:
+
+| alpha | A docs | B docs | B copy docs | Duplicate texts | Unique texts |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1.0 (proportional) | 333 | 67 | 35.3 | 13.0 | 387.0 |
+| 0.5 | 276 | 124 | 66.0 | 20.3 | 379.7 |
+| 0.0 (uniform) | 200 | 200 | 100.0 | 23.3 | 376.7 |
+
+`B copy docs` counts known copies regardless of whether their A twin happened
+to be sampled, so it measures quota spent on duplicate-heavy content;
+`duplicate texts` counts exact duplicate texts actually present in the mix,
+which is lower because not every copy's twin is in the sample. Upweighting the
+small source raises copy quota from 35 to 66 to 100 and lowers unique-text yield
+from 387 to 380 to 377. Mixing alone does not fix a duplicate-heavy source;
+this is why the pipeline applies exact/near dedup after mixing.
+
 ## Algorithms
 
 - **Exact dedup**: BLAKE2b-128 of the NFKC-normalized text; first occurrence wins.

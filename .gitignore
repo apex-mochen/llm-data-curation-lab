@@ -7,4 +7,5 @@ bench/public_corpus/
 bench/public_corpus_full/
 bench/hf_cache/
 bench/decontam_sweep_*/
+bench/mixing_eval/
 bench/*.err
