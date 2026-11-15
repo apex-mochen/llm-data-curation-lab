@@ -4,6 +4,7 @@ import argparse
 import json
 
 from .filters import FilterConfig
+from .lsh_params import optimal_lsh_params
 from .mixing import MixSource, mix_jsonl
 from .pipeline import PipelineConfig, run
 
@@ -54,6 +55,10 @@ def build_parser() -> argparse.ArgumentParser:
     mix_parser.add_argument("--total", type=int, required=True)
     mix_parser.add_argument("--seed", type=int, default=42)
     mix_parser.add_argument("--stats", default=None)
+
+    lsh_parser = sub.add_parser("lsh-params", help="choose LSH bands/rows for a Jaccard threshold")
+    lsh_parser.add_argument("--threshold", type=float, default=0.7)
+    lsh_parser.add_argument("--num-perm", type=int, default=128)
     return parser
 
 
@@ -69,9 +74,11 @@ def main(argv=None) -> int:
         stats = run(args.input, args.output, eval_path=args.eval, config=config, limit=args.limit)
     elif args.command == "mix":
         stats = mix_jsonl(args.input, args.output, args.total, seed=args.seed)
+    elif args.command == "lsh-params":
+        stats = optimal_lsh_params(args.threshold, args.num_perm)
     else:
         raise SystemExit(f"unknown command: {args.command}")
-    _emit(stats, args.stats)
+    _emit(stats, getattr(args, "stats", None))
     return 0
 
 

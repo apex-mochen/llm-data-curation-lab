@@ -65,6 +65,17 @@ the per-document transient allocation, which is what causes long-tail OOMs.
 - Band keys are raw signature slices (`bytes`), not Python tuples, to keep the
   bucket memory predictable.
 
+## LSH parameter selection
+
+- `optimal_lsh_params(threshold, num_perm)` minimizes the average of the
+  false-positive area below the target and the false-negative area above it,
+  with `bands * rows <= num_perm`.
+- The integration is a 200-step numeric approximation; the selected S-curve
+  crossing can be above the target because the objective is integrated error,
+  not a single point.
+- The pipeline keeps a fixed 16 × 8 default; the helper is available for recipes
+  that want a different threshold.
+
 ## SimHash details
 
 - 64 fingerprint bits; each 5-gram shingle hash votes +1/-1 on every bit, and

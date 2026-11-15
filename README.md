@@ -31,6 +31,7 @@ This project implements those pieces directly and measures them.
 curation_lab/
   hashing.py    stable 32-bit shingle hashes + 128-bit exact hashes
   minhash.py    MinHash signatures (universal hashing) + LSH banding
+  lsh_params.py  choose LSH bands/rows from a target Jaccard threshold
   dedup.py      ExactDedup + MinHashLSHDedup
   filters.py    length / alpha / symbol / repeated-line filters
   decontam.py   n-gram overlap against an evaluation set
@@ -100,6 +101,28 @@ replace, not a claim that proportional quotas are optimal.
   Hamming distance is below a threshold. Used as a second near-duplicate
   algorithm and as a cross-check on MinHash.
 
+## LSH parameter selection
+
+`curation_lab/lsh_params.py` chooses bands/rows from a target Jaccard
+threshold. It minimizes the average area of the S-curve's false-positive
+region below the target and false-negative region above it, subject to
+`bands * rows <= num_perm`.
+
+```bash
+python -m curation_lab.cli lsh-params --threshold 0.7 --num-perm 128
+```
+
+| Target Jaccard | Bands | Rows | S-curve threshold | Weighted error |
+| ---: | ---: | ---: | ---: | ---: |
+| 0.5 | 25 | 5 | 0.525 | 0.0218 |
+| 0.7 | 12 | 10 | 0.780 | 0.0158 |
+| 0.9 | 3 | 42 | 0.974 | 0.0033 |
+
+The fixed 16 × 8 configuration used by the pipeline has an S-curve threshold of
+0.707. The selected parameters can differ because the objective is the
+integrated error, not the point where the curve crosses 0.5. The integration is
+a 200-step numeric approximation.
+
 ## MinHash vs SimHash (quality)
 
 `bench/bench_dedup_quality.py` builds 1,000 labeled pairs (200 base documents ×
@@ -127,11 +150,11 @@ This is a synthetic, single-configuration comparison (100-token documents,
 python -m pytest tests -q
 ```
 
-`35 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`38 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
-transitive vs first-match chain handling, SimHash fingerprints/Hamming,
-filter boundaries, decontamination ratio, weighted quota allocation + reservoir
-mixing, and the full pipeline stats/output.
+transitive vs first-match chain handling, SimHash fingerprints/Hamming, LSH
+parameter selection, filter boundaries, decontamination ratio, weighted quota
+allocation + reservoir mixing, and the full pipeline stats/output.
 
 ## Benchmark
 
