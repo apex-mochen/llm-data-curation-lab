@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "curation-lab"
+version = "0.1.0"
+description = "A small, testable LLM data curation pipeline: quality filters, exact and MinHash-LSH dedup, n-gram decontamination."
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26"]
+
+[project.optional-dependencies]
+bench = ["psutil"]
+dev = ["pytest", "black", "isort", "flake8"]
+
+[project.scripts]
+curation-lab = "curation_lab.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["curation_lab*"]
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = ["E203", "E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
