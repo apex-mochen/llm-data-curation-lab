@@ -137,6 +137,25 @@ The fixed 16 × 8 configuration used by the pipeline has an S-curve threshold of
 integrated error, not the point where the curve crosses 0.5. The integration is
 a 200-step numeric approximation.
 
+## LSH banding quality
+
+`bench/bench_lsh_quality.py` evaluates the actual any-band-match decision (not
+just the MinHash signature estimate) on the same 1,000 labeled pairs:
+
+| Bands × rows | S-curve | Precision | Recall | F1 |
+| ---: | ---: | ---: | ---: | ---: |
+| 8 × 16 | 0.878 | 1.000 | 0.894 | 0.944 |
+| 12 × 10 | 0.780 | 1.000 | 0.936 | 0.967 |
+| 16 × 8 | 0.707 | 1.000 | 0.948 | 0.973 |
+| 25 × 5 | 0.525 | 1.000 | 0.970 | 0.985 |
+| 3 × 42 | 0.974 | 1.000 | 0.606 | 0.755 |
+
+All configurations have precision 1.0 on this set because the labeled pairs are
+exact or high-overlap changes; recall is the differentiator. That does not mean
+the lowest-threshold configuration is universally best: a corpus with
+borderline pairs would trade some precision for that recall. The table is a
+configuration sanity check, not a leaderboard.
+
 ## MinHash vs SimHash (quality)
 
 `bench/bench_dedup_quality.py` builds 1,000 labeled pairs (200 base documents ×
