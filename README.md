@@ -36,7 +36,12 @@ curation_lab/
   cli.py        `curation-lab run ...`
 tests/          21 unit tests (algorithms + end-to-end pipeline)
 bench/          synthetic corpus generator + benchmark scripts
+docs/DESIGN.md  memory model, algorithm details, limitations
 ```
+
+Design trade-offs (why 32-bit shingle hashes, why 61-bit modulo, why the
+dedup index is the only growing state) are documented in
+[docs/DESIGN.md](docs/DESIGN.md).
 
 ## Usage
 
