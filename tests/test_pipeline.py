@@ -67,3 +67,26 @@ def test_pipeline_filters_dedups_and_decontaminates():
     kept = _read_jsonl(output_path)
     assert {record["id"] for record in kept} == {1, 6}
     assert kept[0]["text"] == base
+
+
+def test_pipeline_auto_selects_lsh_params():
+    tmp = _tmpdir()
+    docs = [
+        {"id": 0, "text": " ".join(f"alpha{i}" for i in range(100))},
+        {"id": 1, "text": " ".join(f"beta{i}" for i in range(100))},
+        {"id": 2, "text": " ".join(f"gamma{i}" for i in range(100))},
+    ]
+    input_path = tmp / "input.jsonl"
+    output_path = tmp / "output.jsonl"
+    _write_jsonl(input_path, docs)
+
+    config = PipelineConfig(
+        filters=FilterConfig(min_chars=20),
+        jaccard_threshold=0.7,
+    )
+    stats = run(str(input_path), str(output_path), config=config)
+
+    assert stats["lsh"]["bands"] == 12
+    assert stats["lsh"]["rows"] == 10
+    assert stats["lsh"]["target_threshold"] == 0.7
+    assert stats["output"] == 3

@@ -40,6 +40,12 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--min-chars", type=int, default=50)
     run_parser.add_argument("--max-chars", type=int, default=200_000)
     run_parser.add_argument("--no-near-dedup", action="store_true")
+    run_parser.add_argument(
+        "--jaccard-threshold",
+        type=float,
+        default=None,
+        help="auto-select LSH bands/rows for this target Jaccard threshold",
+    )
     run_parser.add_argument("--decontam-ngram", type=int, default=13)
     run_parser.add_argument("--decontam-threshold", type=float, default=0.5)
 
@@ -74,6 +80,7 @@ def main(argv=None) -> int:
         config = PipelineConfig(
             filters=FilterConfig(min_chars=args.min_chars, max_chars=args.max_chars),
             near_dedup=not args.no_near_dedup,
+            jaccard_threshold=args.jaccard_threshold,
             decontam_ngram=args.decontam_ngram,
             decontam_threshold=args.decontam_threshold,
         )

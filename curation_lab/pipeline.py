@@ -10,6 +10,7 @@ from typing import Dict, Iterator, Optional
 from .decontam import NGramDecontaminator
 from .dedup import ExactDedup, MinHashLSHDedup
 from .filters import FilterConfig, check, normalize_text
+from .lsh_params import optimal_lsh_params
 
 
 @dataclass
@@ -21,6 +22,7 @@ class PipelineConfig:
     num_perm: int = 128
     bands: int = 16
     rows: int = 8
+    jaccard_threshold: Optional[float] = None
     ngram: int = 5
     mode: str = "word"
     decontam_ngram: int = 13
@@ -71,11 +73,18 @@ def run(
         raise ValueError("limit must be positive")
 
     exact = ExactDedup()
+    lsh_params = {
+        "bands": config.bands,
+        "rows": config.rows,
+        "s_curve_threshold": round((1.0 / config.bands) ** (1.0 / config.rows), 6),
+    }
+    if config.jaccard_threshold is not None:
+        lsh_params = optimal_lsh_params(config.jaccard_threshold, config.num_perm)
     near = (
         MinHashLSHDedup(
             num_perm=config.num_perm,
-            bands=config.bands,
-            rows=config.rows,
+            bands=lsh_params["bands"],
+            rows=lsh_params["rows"],
             ngram=config.ngram,
             mode=config.mode,
             transitive=config.transitive_dedup,
@@ -102,6 +111,7 @@ def run(
         "near_duplicates": 0,
         "contaminated": 0,
         "output": 0,
+        "lsh": lsh_params,
     }
     peak, stop, sampler = _peak_rss_sampler()
     started = time.perf_counter()

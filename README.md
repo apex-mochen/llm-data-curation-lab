@@ -137,6 +137,23 @@ The fixed 16 × 8 configuration used by the pipeline has an S-curve threshold of
 integrated error, not the point where the curve crosses 0.5. The integration is
 a 200-step numeric approximation.
 
+## Auto LSH configuration
+
+`curation-lab run` accepts `--jaccard-threshold`; when set, the pipeline calls
+`optimal_lsh_params` and uses the selected bands/rows instead of the fixed
+16 × 8 default. The resolved parameters are stored in `stats["lsh"]`.
+
+```bash
+python -m curation_lab.cli run \
+  --input corpus.jsonl --output kept.jsonl --jaccard-threshold 0.7
+```
+
+On the 20k-document synthetic corpus, auto selection for 0.7 gives 12 × 10 and
+removes 2,941 near duplicates; the fixed 16 × 8 removes 2,962. The difference is
+0.7% and wall time is similar on the same machine. This is a threshold-driven
+trade-off knob, not an automatic quality win; the default stays explicit so a
+recipe's behavior does not change silently.
+
 ## LSH banding quality
 
 `bench/bench_lsh_quality.py` evaluates the actual any-band-match decision (not
