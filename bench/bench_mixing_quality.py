@@ -8,7 +8,6 @@ duplicate text and how many unique documents survive.
 
 import json
 import os
-import random
 
 from curation_lab.mixing import MixSource, mix_jsonl_temperature
 
