@@ -34,4 +34,5 @@ __all__ = [
     "reservoir_sample_jsonl",
     "shingle_hashes",
     "simhash_pairs",
+    "temperature_quotas",
 ]
