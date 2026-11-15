@@ -158,6 +158,29 @@ real Markdown/Python text (including Chinese docs and code punctuation), and
 that near-dedup finds 99 similar documents where exact hashing finds none.
 Raw file: `bench/real_pipeline_results.jsonl`.
 
+## Public corpus (WikiText-2)
+
+A real public corpus check, using the raw WikiText-2 training split
+(`Salesforce/wikitext`, `wikitext-2-raw-v1`) via the Hugging Face `datasets`
+loader:
+
+```bash
+python bench/make_hf_corpus.py \
+  --dataset Salesforce/wikitext --config wikitext-2-raw-v1 \
+  --split train --limit 5000 --min-chars 200 --out-dir bench/public_corpus
+DATA_DIR=bench/public_corpus EVAL=none NEAR_DEDUP=1 python bench/bench_pipeline.py
+```
+
+| Docs | Chars | Filtered | Exact dups | Near dups | Output | Docs/s | Peak RSS |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 5,000 | 3.71 M | 4 low-alpha | 0 | 17 | 4,979 | 3,279–3,967 | 65.0–65.3 MiB |
+
+This is one 5,000-document sample, not a full-corpus or downstream-quality
+claim. It does confirm that the pipeline runs on real Wikipedia text, and that
+near-dedup finds 17 repeated/similar documents where exact hashing finds none.
+Raw file: `bench/public_pipeline_results.jsonl`. The corpus is downloaded at
+run time and is not committed.
+
 ## Cross-check against Data-Juicer
 
 To check that the MinHash-LSH implementation finds the same near-duplicate
