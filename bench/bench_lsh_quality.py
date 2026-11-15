@@ -9,8 +9,6 @@ import json
 import os
 import random
 
-import numpy as np
-
 from curation_lab.hashing import shingle_hashes
 from curation_lab.minhash import LSH, MinHash
 
