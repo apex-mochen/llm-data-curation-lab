@@ -11,6 +11,7 @@ from .decontam import NGramDecontaminator
 from .dedup import ExactDedup, MinHashLSHDedup
 from .filters import FilterConfig, check, normalize_text
 from .lsh_params import optimal_lsh_params
+from .simhash_dedup import SimHashLSHDedup
 
 
 @dataclass
@@ -18,11 +19,13 @@ class PipelineConfig:
     text_key: str = "text"
     filters: FilterConfig = field(default_factory=FilterConfig)
     near_dedup: bool = True
+    near_algo: str = "minhash"
     transitive_dedup: bool = True
     num_perm: int = 128
     bands: int = 16
     rows: int = 8
     jaccard_threshold: Optional[float] = None
+    simhash_hamming: int = 3
     ngram: int = 5
     mode: str = "word"
     decontam_ngram: int = 13
@@ -73,25 +76,33 @@ def run(
         raise ValueError("limit must be positive")
 
     exact = ExactDedup()
-    lsh_params = {
-        "bands": config.bands,
-        "rows": config.rows,
-        "s_curve_threshold": round((1.0 / config.bands) ** (1.0 / config.rows), 6),
-    }
-    if config.jaccard_threshold is not None:
-        lsh_params = optimal_lsh_params(config.jaccard_threshold, config.num_perm)
-    near = (
-        MinHashLSHDedup(
-            num_perm=config.num_perm,
-            bands=lsh_params["bands"],
-            rows=lsh_params["rows"],
-            ngram=config.ngram,
-            mode=config.mode,
-            transitive=config.transitive_dedup,
-        )
-        if config.near_dedup
-        else None
-    )
+    lsh_params = {}
+    near = None
+    if config.near_dedup:
+        if config.near_algo == "minhash":
+            lsh_params = {
+                "bands": config.bands,
+                "rows": config.rows,
+                "s_curve_threshold": round((1.0 / config.bands) ** (1.0 / config.rows), 6),
+            }
+            if config.jaccard_threshold is not None:
+                lsh_params = optimal_lsh_params(config.jaccard_threshold, config.num_perm)
+            near = MinHashLSHDedup(
+                num_perm=config.num_perm,
+                bands=lsh_params["bands"],
+                rows=lsh_params["rows"],
+                ngram=config.ngram,
+                mode=config.mode,
+                transitive=config.transitive_dedup,
+            )
+        elif config.near_algo == "simhash":
+            near = SimHashLSHDedup(
+                ngram=config.ngram,
+                mode=config.mode,
+                max_hamming=config.simhash_hamming,
+            )
+        else:
+            raise ValueError(f"unknown near_algo: {config.near_algo}")
     decontam = None
     if eval_path:
         decontam = NGramDecontaminator(
@@ -111,6 +122,7 @@ def run(
         "near_duplicates": 0,
         "contaminated": 0,
         "output": 0,
+        "near_algo": config.near_algo,
         "lsh": lsh_params,
     }
     peak, stop, sampler = _peak_rss_sampler()

@@ -41,6 +41,13 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--max-chars", type=int, default=200_000)
     run_parser.add_argument("--no-near-dedup", action="store_true")
     run_parser.add_argument(
+        "--near-algo",
+        choices=["minhash", "simhash"],
+        default="minhash",
+        help="near-duplicate algorithm",
+    )
+    run_parser.add_argument("--simhash-hamming", type=int, default=3)
+    run_parser.add_argument(
         "--jaccard-threshold",
         type=float,
         default=None,
@@ -80,6 +87,8 @@ def main(argv=None) -> int:
         config = PipelineConfig(
             filters=FilterConfig(min_chars=args.min_chars, max_chars=args.max_chars),
             near_dedup=not args.no_near_dedup,
+            near_algo=args.near_algo,
+            simhash_hamming=args.simhash_hamming,
             jaccard_threshold=args.jaccard_threshold,
             decontam_ngram=args.decontam_ngram,
             decontam_threshold=args.decontam_threshold,

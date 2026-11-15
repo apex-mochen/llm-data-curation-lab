@@ -37,9 +37,10 @@ curation_lab/
   decontam.py   n-gram overlap against an evaluation set
   mixing.py     weighted quotas + per-source reservoir sampling
   simhash.py    64-bit SimHash fingerprints + Hamming distance
+  simhash_dedup.py  pigeonhole-banded SimHash near dedup
   pipeline.py   streaming JSONL pipeline + stats
   cli.py        `curation-lab run ...` / `curation-lab mix ...`
-tests/          42 unit tests (algorithms + end-to-end pipeline)
+tests/          48 unit tests (algorithms + end-to-end pipeline)
 bench/          synthetic corpus generator + benchmark scripts
 docs/DESIGN.md  memory model, algorithm details, limitations
 ```
@@ -193,6 +194,32 @@ the lowest-threshold configuration is universally best: a corpus with
 borderline pairs would trade some precision for that recall. The table is a
 configuration sanity check, not a leaderboard.
 
+## SimHash near dedup (pipeline)
+
+`--near-algo simhash --simhash-hamming 3` switches the pipeline from MinHash-LSH
+to SimHash. The implementation splits the 64-bit fingerprint into
+`max_hamming + 1` blocks; by pigeonhole, any pair within the Hamming threshold
+shares at least one block, so only candidates from shared blocks need a full
+Hamming comparison.
+
+On the 20k-document synthetic corpus:
+
+| Algorithm | Near dups | Output | Docs/s | Peak RSS |
+| --- | ---: | ---: | ---: | ---: |
+| MinHash 16×8 | 2,962 | 10,038 | 4,976–5,055 | 69.4–69.7 MiB |
+| SimHash H=3 | 2,937 | 10,063 | 1,249–1,338 | 45.2–45.4 MiB |
+| SimHash H=8 | 12,066 | 959 | 2,295–2,338 | 41.0–41.2 MiB |
+
+H=3 removes almost the same count as MinHash with lower memory, but the pure
+Python SimHash fingerprint is slower. H=8 over-deduplicates this corpus
+(12,066 near duplicates, 959 documents kept), so the Hamming threshold must be
+tuned per corpus; SimHash is not the default. H=8 is faster than H=3 here only
+because the kept index becomes much smaller.
+
+Raw files: `bench/pipeline_results_fixed.jsonl`,
+`bench/pipeline_results_simhash_h3.jsonl`,
+`bench/pipeline_results_simhash_h8.jsonl`.
+
 ## MinHash vs SimHash (quality)
 
 `bench/bench_dedup_quality.py` builds 1,000 labeled pairs (200 base documents ×
@@ -220,12 +247,12 @@ This is a synthetic, single-configuration comparison (100-token documents,
 python -m pytest tests -q
 ```
 
-`42 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`48 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
-transitive vs first-match chain handling, SimHash fingerprints/Hamming, LSH
-parameter selection, filter boundaries, decontamination ratio, weighted and
-temperature quota allocation + reservoir mixing, and the full pipeline
-stats/output.
+transitive vs first-match chain handling, SimHash fingerprints/Hamming, banded
+SimHash dedup, LSH parameter selection, filter boundaries, decontamination
+ratio, weighted and temperature quota allocation + reservoir mixing, and the
+full pipeline stats/output.
 
 ## Benchmark
 

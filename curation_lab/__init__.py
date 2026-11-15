@@ -14,6 +14,7 @@ from .mixing import (
     temperature_quotas,
 )
 from .simhash import SimHash, simhash_pairs
+from .simhash_dedup import SimHashLSHDedup
 
 __all__ = [
     "ExactDedup",
@@ -22,6 +23,7 @@ __all__ = [
     "MinHash",
     "MixSource",
     "SimHash",
+    "SimHashLSHDedup",
     "allocate_quotas",
     "collision_probability",
     "count_jsonl",

@@ -90,3 +90,25 @@ def test_pipeline_auto_selects_lsh_params():
     assert stats["lsh"]["rows"] == 10
     assert stats["lsh"]["target_threshold"] == 0.7
     assert stats["output"] == 3
+
+
+def test_pipeline_simhash_near_dedup():
+    tmp = _tmpdir()
+    tokens = [f"token{i}alpha" for i in range(100)]
+    base = " ".join(tokens)
+    changed = " ".join(["changed"] + tokens[1:])
+    docs = [{"id": 0, "text": base}, {"id": 1, "text": changed}]
+    input_path = tmp / "input.jsonl"
+    output_path = tmp / "output.jsonl"
+    _write_jsonl(input_path, docs)
+
+    config = PipelineConfig(
+        filters=FilterConfig(min_chars=20),
+        near_algo="simhash",
+        simhash_hamming=12,
+    )
+    stats = run(str(input_path), str(output_path), config=config)
+
+    assert stats["near_algo"] == "simhash"
+    assert stats["near_duplicates"] == 1
+    assert stats["output"] == 1

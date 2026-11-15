@@ -10,6 +10,8 @@ DATA_DIR = os.environ.get("DATA_DIR", "bench/data")
 REPEAT = os.environ.get("REPEAT", "0")
 NEAR_DEDUP = os.environ.get("NEAR_DEDUP", "1") != "0"
 TRANSITIVE = os.environ.get("TRANSITIVE", "1") != "0"
+NEAR_ALGO = os.environ.get("NEAR_ALGO", "minhash")
+SIMHASH_HAMMING = int(os.environ.get("SIMHASH_HAMMING", "3"))
 JACCARD = os.environ.get("JACCARD_THRESHOLD", "")
 JACCARD_THRESHOLD = float(JACCARD) if JACCARD else None
 EVAL = os.environ.get("EVAL", f"{DATA_DIR}/eval.jsonl")
@@ -18,6 +20,8 @@ eval_path = None if EVAL.lower() in ("", "0", "none") else EVAL
 config = PipelineConfig(
     filters=FilterConfig(min_chars=50),
     near_dedup=NEAR_DEDUP,
+    near_algo=NEAR_ALGO,
+    simhash_hamming=SIMHASH_HAMMING,
     transitive_dedup=TRANSITIVE,
     jaccard_threshold=JACCARD_THRESHOLD,
     num_perm=128,
