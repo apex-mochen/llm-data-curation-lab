@@ -1,5 +1,7 @@
 # LLM Data Curation Lab
 
+[![ci](https://github.com/apex-mochen/llm-data-curation-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/apex-mochen/llm-data-curation-lab/actions/workflows/ci.yml)
+
 A small, reproducible data-engineering project for LLM pretraining/SFT data:
 
 **quality filters → exact dedup → MinHash-LSH near dedup → n-gram decontamination → stats**
