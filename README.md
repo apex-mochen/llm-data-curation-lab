@@ -11,6 +11,9 @@ readable, testable, and benchmarkable. The goal is to demonstrate the data
 algorithms and the streaming engineering around them, not to replace a
 production framework.
 
+For the narrative version — decisions, failed experiments and limits — see
+[docs/CASE-STUDY.md](docs/CASE-STUDY.md).
+
 ## Why this project exists
 
 Most "data engineering" portfolio projects stop at `pandas.read_csv` + a few
