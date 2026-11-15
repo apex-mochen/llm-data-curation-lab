@@ -97,10 +97,10 @@ NEAR_DEDUP=0 python bench/bench_pipeline.py   # exact only
 | Variant | Exact dups | Near dups | Output | Docs/s | Peak RSS |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | exact only (`NEAR_DEDUP=0`) | 6,950 | 0 | 13,000 | 11,518–11,842 | 40.7 MiB |
-| exact + MinHash-LSH | 6,950 | 2,962 | 10,038 | 7,506–7,751 | 68.8 MiB |
+| exact + MinHash-LSH | 6,950 | 2,962 | 10,038 | 7,420–7,682 | 69.3–69.6 MiB |
 
 The near-dedup stage removes a further 2,962 documents (22.8% of the exact-only
-output) at a cost of about +53% wall time and +28 MiB peak RSS. That is the
+output) at a cost of about +55% wall time and +29 MiB peak RSS. That is the
 trade-off a curation pipeline has to make explicitly; both variants are
 measured on the same corpus.
 
