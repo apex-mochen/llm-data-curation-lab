@@ -1,0 +1,51 @@
+{
+  "config": {
+    "base_docs": 200,
+    "pairs": 1000,
+    "tokens_per_doc": 100,
+    "ngram": 5,
+    "jaccard_threshold": 0.7,
+    "minhash_permutations": 128,
+    "simhash_bits": 64
+  },
+  "duplicate_pairs_by_true_jaccard": 800,
+  "minhash": {
+    "tp": 751,
+    "fp": 0,
+    "fn": 49,
+    "precision": 1.0,
+    "recall": 0.93875,
+    "f1": 0.968407,
+    "mean_abs_jaccard_error": 0.046756
+  },
+  "simhash": {
+    "best_threshold": 11,
+    "best": {
+      "tp": 789,
+      "fp": 10,
+      "fn": 11,
+      "precision": 0.987484,
+      "recall": 0.98625,
+      "f1": 0.986867,
+      "threshold": 11
+    },
+    "at_3": {
+      "tp": 526,
+      "fp": 0,
+      "fn": 274,
+      "precision": 1.0,
+      "recall": 0.6575,
+      "f1": 0.793363
+    },
+    "at_5": {
+      "tp": 627,
+      "fp": 1,
+      "fn": 173,
+      "precision": 0.998408,
+      "recall": 0.78375,
+      "f1": 0.878151
+    },
+    "mean_hamming_duplicates": 2.933,
+    "mean_hamming_nonduplicates": 16.2
+  }
+}

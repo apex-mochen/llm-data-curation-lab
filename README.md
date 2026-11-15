@@ -35,9 +35,10 @@ curation_lab/
   filters.py    length / alpha / symbol / repeated-line filters
   decontam.py   n-gram overlap against an evaluation set
   mixing.py     weighted quotas + per-source reservoir sampling
+  simhash.py    64-bit SimHash fingerprints + Hamming distance
   pipeline.py   streaming JSONL pipeline + stats
   cli.py        `curation-lab run ...` / `curation-lab mix ...`
-tests/          29 unit tests (algorithms + end-to-end pipeline)
+tests/          35 unit tests (algorithms + end-to-end pipeline)
 bench/          synthetic corpus generator + benchmark scripts
 docs/DESIGN.md  memory model, algorithm details, limitations
 ```
@@ -94,6 +95,31 @@ replace, not a claim that proportional quotas are optimal.
 - **Decontamination**: BLAKE2b-64 hashes of 13-grams from the reference set;
   a document is dropped when the fraction of its n-grams present in the
   reference set is at least the threshold (default 0.5).
+- **SimHash**: each 5-gram shingle hash votes on all 64 fingerprint bits; the
+  sign of the vote sets the bit. Two documents are near duplicates when their
+  Hamming distance is below a threshold. Used as a second near-duplicate
+  algorithm and as a cross-check on MinHash.
+
+## MinHash vs SimHash (quality)
+
+`bench/bench_dedup_quality.py` builds 1,000 labeled pairs (200 base documents ×
+exact / 1-word / 5-word / 10-word changes / unrelated). Ground truth is exact
+5-gram Jaccard on shingle sets; a pair is a duplicate when Jaccard ≥ 0.7.
+
+| Algorithm | Threshold | Precision | Recall | F1 |
+| --- | ---: | ---: | ---: | ---: |
+| MinHash (128 perms) | Jaccard 0.7 | 1.000 | 0.939 | 0.968 |
+| SimHash (64 bit) | Hamming 3 | 1.000 | 0.658 | 0.793 |
+| SimHash (64 bit) | Hamming 5 | 0.998 | 0.784 | 0.878 |
+| SimHash (64 bit) | Hamming 11 (best F1) | 0.987 | 0.986 | 0.987 |
+
+800 of the 1,000 pairs are duplicates by true Jaccard. MinHash's mean absolute
+Jaccard error is 0.047. SimHash's mean Hamming distance is 2.93 for duplicates
+and 16.2 for non-duplicates, so the threshold choice is the main trade-off:
+strict thresholds give perfect precision but lose recall.
+
+This is a synthetic, single-configuration comparison (100-token documents,
+5-grams); it is not a claim that one algorithm is universally better.
 
 ## Tests
 
@@ -101,11 +127,11 @@ replace, not a claim that proportional quotas are optimal.
 python -m pytest tests -q
 ```
 
-`31 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`35 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
-transitive vs first-match chain handling, filter boundaries, decontamination
-ratio, weighted quota allocation + reservoir mixing, and the full pipeline
-stats/output.
+transitive vs first-match chain handling, SimHash fingerprints/Hamming,
+filter boundaries, decontamination ratio, weighted quota allocation + reservoir
+mixing, and the full pipeline stats/output.
 
 ## Benchmark
 

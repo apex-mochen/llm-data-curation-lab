@@ -65,6 +65,16 @@ the per-document transient allocation, which is what causes long-tail OOMs.
 - Band keys are raw signature slices (`bytes`), not Python tuples, to keep the
   bucket memory predictable.
 
+## SimHash details
+
+- 64 fingerprint bits; each 5-gram shingle hash votes +1/-1 on every bit, and
+  the sign of the vote sets the bit.
+- Near-duplicate decision is a Hamming-distance threshold. The benchmark in the
+  README shows the trade-off: Hamming 3 gives precision 1.0 / recall 0.66,
+  while Hamming 11 gives the best F1 (0.987) with some false positives.
+- SimHash is implemented as a second algorithm and a cross-check on MinHash,
+  not as the pipeline's default deduplicator.
+
 ## Decontamination details
 
 - Reference n-grams are hashed with BLAKE2b-64 (not CRC32) because the
