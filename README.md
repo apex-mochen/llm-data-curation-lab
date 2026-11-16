@@ -222,6 +222,10 @@ The threshold was chosen on this synthetic separation; it has **not** been
 validated against human quality labels or downstream training. Raw result:
 `bench/quality_results.json`.
 
+On full WikiText-2 (14,324 docs), scores are min 0.696, median 0.859, and the
+0.65 threshold keeps 100% — it removes extreme noise, not a ranking of clean
+text (`bench/quality_wikitext.json`).
+
 ## Disk-backed exact dedup
 
 `--exact-db seen.sqlite` stores 128-bit exact-dedup digests in SQLite instead of
