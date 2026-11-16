@@ -112,3 +112,24 @@ def test_pipeline_simhash_near_dedup():
     assert stats["near_algo"] == "simhash"
     assert stats["near_duplicates"] == 1
     assert stats["output"] == 1
+
+def test_pipeline_quality_min_filters_low_diversity():
+    tmp = _tmpdir()
+    input_path = tmp / "input.jsonl"
+    output_path = tmp / "output.jsonl"
+    clean = " ".join(f"alpha{i}" for i in range(60))
+    noisy = " ".join(["word"] * 60)
+    _write_jsonl(input_path, [{"id": 1, "text": clean}, {"id": 2, "text": noisy}])
+
+    config = PipelineConfig(
+        filters=FilterConfig(min_chars=10, max_chars=10_000),
+        near_dedup=False,
+        quality_min=0.65,
+    )
+    stats = run(str(input_path), str(output_path), config=config)
+    kept = _read_jsonl(output_path)
+
+    assert len(kept) == 1
+    assert kept[0]["id"] == 1
+    assert stats["filtered"]["low_quality"] == 1
+    assert "quality_score" in kept[0]["curation"]

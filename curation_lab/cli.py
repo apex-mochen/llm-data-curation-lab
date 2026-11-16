@@ -40,6 +40,12 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--limit", type=int, default=None)
     run_parser.add_argument("--min-chars", type=int, default=50)
     run_parser.add_argument("--max-chars", type=int, default=200_000)
+    run_parser.add_argument(
+        "--quality-min",
+        type=float,
+        default=None,
+        help="drop documents whose lexical quality score is below this threshold",
+    )
     run_parser.add_argument("--no-near-dedup", action="store_true")
     run_parser.add_argument(
         "--near-algo",
@@ -103,6 +109,7 @@ def main(argv=None) -> int:
             jaccard_threshold=args.jaccard_threshold,
             decontam_ngram=args.decontam_ngram,
             decontam_threshold=args.decontam_threshold,
+            quality_min=args.quality_min,
         )
         stats = run(args.input, args.output, eval_path=args.eval, config=config, limit=args.limit)
     elif args.command == "mix":

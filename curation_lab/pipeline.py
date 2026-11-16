@@ -10,6 +10,7 @@ from typing import Dict, Iterator, Optional
 from .decontam import NGramDecontaminator
 from .dedup import ExactDedup, MinHashLSHDedup
 from .filters import FilterConfig, check, normalize_text
+from .quality import quality_score, quality_stats
 from .lsh_params import optimal_lsh_params
 from .simhash_dedup import SimHashLSHDedup
 
@@ -31,6 +32,7 @@ class PipelineConfig:
     mode: str = "word"
     decontam_ngram: int = 13
     decontam_threshold: float = 0.5
+    quality_min: Optional[float] = None
 
 
 def read_jsonl(path: str) -> Iterator[dict]:
@@ -153,6 +155,12 @@ def run(
             if reason is not None:
                 stats["filtered"][reason] = stats["filtered"].get(reason, 0) + 1
                 continue
+            quality_value = None
+            if config.quality_min is not None:
+                quality_value = quality_score(quality_stats(text))
+                if quality_value < config.quality_min:
+                    stats["filtered"]["low_quality"] = stats["filtered"].get("low_quality", 0) + 1
+                    continue
             if exact.check_and_add(text):
                 stats["exact_duplicates"] += 1
                 continue
@@ -161,6 +169,8 @@ def run(
                 continue
 
             curation = {}
+            if quality_value is not None:
+                curation["quality_score"] = round(quality_value, 6)
             if decontam is not None:
                 ratio = decontam.match_ratio(text)
                 curation["decontamination_ratio"] = round(ratio, 6)
