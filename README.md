@@ -203,6 +203,25 @@ no faster than 4. Per-task edge dedup is necessary but not sufficient — a larg
 band count or doc-sharded signatures would be needed for stronger scaling.
 
 Raw log: `bench/ray_lsh.log`.
+## Lexical quality scoring (synthetic baseline)
+
+`curation_lab/quality.py` is a model-free quality baseline: token diversity,
+4-gram repetition, and normalized token entropy, combined into a 0–1 score.
+The default `QualityScorer(min_score=0.65)` is a conservative pre-filter, not a
+learned quality classifier.
+
+1,000 synthetic documents per class:
+
+| Class | Mean score | Keep rate @0.65 |
+| --- | ---: | ---: |
+| clean random 30-word docs | 0.988 | 1.000 |
+| repeated single token | 0.024 | 0.000 |
+| low diversity (3-word vocab) | 0.588 | 0.000 |
+
+The threshold was chosen on this synthetic separation; it has **not** been
+validated against human quality labels or downstream training. Raw result:
+`bench/quality_results.json`.
+
 ## Disk-backed exact dedup
 
 `--exact-db seen.sqlite` stores 128-bit exact-dedup digests in SQLite instead of
