@@ -162,6 +162,28 @@ Quality weighting raises the filter pass rate from 92% to 97% and unique texts
 from 356 to 386 on this synthetic setup. Filter pass rate is still a proxy, not
 downstream LLM quality; it is included because it is measurable and reproducible.
 
+## Ray parallel signature computation
+
+`bench/bench_ray_signatures.py` shards MinHash signature computation across Ray
+tasks; documents are generated inside each worker, so no text is shipped through
+the object store. Each task returns a digest of its shard's signatures, and the
+driver hashes the ordered shard digests.
+
+500,000 synthetic documents × 20 tokens, 128 permutations, 16 tasks:
+
+| Ray workers | Ray time | Speedup vs local | Shard digest |
+| ---: | ---: | ---: | --- |
+| 1 | 22.68 s | 1.00× | match |
+| 2 | 11.43 s | 1.94× | match |
+| 4 | 6.58 s | 3.36× | match |
+| 8 | 3.68 s | 6.09× | match |
+
+This parallelizes the **signature stage only**; LSH clustering and the global
+union-find merge are still single-process. It is a 500k-document synthetic demo,
+not a billion-document production result.
+
+Raw log: `bench/ray_signatures.log`.
+
 ## Disk-backed exact dedup
 
 `--exact-db seen.sqlite` stores 128-bit exact-dedup digests in SQLite instead of
