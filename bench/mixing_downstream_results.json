@@ -1,0 +1,41 @@
+{
+  "config": {
+    "source_a": 1000,
+    "source_b_copies": 100,
+    "source_b_noisy": 100,
+    "source_b_quality": 0.25,
+    "total": 400,
+    "min_chars": 50,
+    "seeds": [
+      1,
+      2,
+      3
+    ]
+  },
+  "results": [
+    {
+      "output": 400.0,
+      "passed_filters": 368.33,
+      "pass_rate": 0.92,
+      "unique_texts": 356.33,
+      "duplicate_texts": 43.67,
+      "quotas": [
+        333,
+        67
+      ],
+      "beta": 0.0
+    },
+    {
+      "output": 400.0,
+      "passed_filters": 389.0,
+      "pass_rate": 0.97,
+      "unique_texts": 386.0,
+      "duplicate_texts": 14.0,
+      "quotas": [
+        381,
+        19
+      ],
+      "beta": 1.0
+    }
+  ]
+}

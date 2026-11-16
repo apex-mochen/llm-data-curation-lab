@@ -146,6 +146,22 @@ is a synthetic proxy. The experiment only shows that quality weighting can
 reduce quota spent on a duplicate-heavy source without changing the mixing
 machinery.
 
+### Downstream proxy: filter pass rate
+
+`bench/bench_mixing_downstream.py` adds a more end-to-end proxy. Source A has
+1,000 clean documents; source B has 100 copies of A plus 100 short/symbol-heavy
+documents. The mix is evaluated by the pipeline's quality filters, not by a
+model.
+
+| beta | Quotas (A, B) | Passed filters | Pass rate | Unique texts | Duplicate texts |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 0.0 | 333, 67 | 368.3 | 0.920 | 356.3 | 43.7 |
+| 1.0 | 381, 19 | 389.0 | 0.970 | 386.0 | 14.0 |
+
+Quality weighting raises the filter pass rate from 92% to 97% and unique texts
+from 356 to 386 on this synthetic setup. Filter pass rate is still a proxy, not
+downstream LLM quality; it is included because it is measurable and reproducible.
+
 ## Algorithms
 
 - **Exact dedup**: BLAKE2b-128 of the NFKC-normalized text; first occurrence wins.
