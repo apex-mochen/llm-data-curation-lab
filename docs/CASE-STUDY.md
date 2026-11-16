@@ -112,10 +112,10 @@ memory-constrained option, not a throughput option.
   as a warning, not a recommended setting.
 - A decontamination operator prototype duplicated upstream PR #1184, so it was
   not published.
-- Ray band-sharded LSH (200k signatures, 16 bands, 20k duplicate groups) matched
-  clusters but did not scale: 0.83× / 0.97× / 1.14× / 1.04× at 1/2/4/8 workers.
-  The central Python union-find over ~2.88M edges dominated; this is recorded as
-  a negative result, not a distributed-clustering success.
+- Ray band-sharded LSH (200k signatures, 16 bands, 20k duplicate groups) with
+  per-task edge dedup: 1.09× / 1.40× / 1.62× / 1.60× at 1/2/4/8 workers;
+  clusters matched. The gain is limited by 16 bands and the 204 MB signature
+  transfer, so it is not a production distributed-clustering result.
 
 ## Limits
 

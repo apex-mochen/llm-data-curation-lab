@@ -184,28 +184,25 @@ not a billion-document production result.
 
 Raw log: `bench/ray_signatures.log`.
 
-### Negative result: band-sharded LSH did not scale
+### Limited speedup: band-sharded LSH with per-task edge dedup
 
 `bench/bench_ray_lsh.py` shards 16 LSH bands across Ray tasks over 200k
-signatures (20k duplicate groups × 10 copies). Candidate-pair generation
-parallelizes, but the driver still applies one global union-find over ~2.88M
-edges:
+signatures (20k duplicate groups × 10 copies). Each task deduplicates its own
+candidate edges before returning; the driver applies one global union-find.
 
 | Ray workers | Ray time | Speedup vs local |
 | ---: | ---: | ---: |
-| 1 | 10.00 s | 0.83× |
-| 2 | 8.61 s | 0.97× |
-| 4 | 7.64 s | 1.14× |
-| 8 | 7.73 s | 1.04× |
+| 1 | 8.51 s | 1.09× |
+| 2 | 6.10 s | 1.40× |
+| 4 | 5.05 s | 1.62× |
+| 8 | 5.24 s | 1.60× |
 
-Clusters matched (20,000) in every run, but there is no meaningful speedup.
-The bottleneck is the central Python union-find plus edge transfer, not the
-band work. A real distributed design needs distributed union-find (e.g. BTS)
-or aggressive edge deduplication; this benchmark should not be presented as a
-distributed-clustering success.
+Clusters matched (20,000) in every run. The gain is limited: there are only 16
+bands, and each task still receives the 204 MB signature array; 8 workers are
+no faster than 4. Per-task edge dedup is necessary but not sufficient — a larger
+band count or doc-sharded signatures would be needed for stronger scaling.
 
 Raw log: `bench/ray_lsh.log`.
-
 ## Disk-backed exact dedup
 
 `--exact-db seen.sqlite` stores 128-bit exact-dedup digests in SQLite instead of

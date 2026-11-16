@@ -65,15 +65,23 @@ def band_edges(signatures, band_start, band_end):
                 pairs.append((first, doc))
     if not pairs:
         return np.empty((0, 2), dtype=np.int64)
-    return np.asarray(pairs, dtype=np.int64)
+    return np.unique(np.asarray(pairs, dtype=np.int64), axis=0)
+
+
+def unique_edges(edge_arrays):
+    edges = [edge for edge in edge_arrays if len(edge)]
+    if not edges:
+        return np.empty((0, 2), dtype=np.int64)
+    return np.unique(np.vstack(edges), axis=0)
 
 
 def local_clusters(signatures):
     uf = UnionFind(len(signatures))
+    edge_arrays = []
     for band in range(BANDS):
-        edges = band_edges(signatures, band, band + 1)
-        for a, b in edges:
-            uf.union(int(a), int(b))
+        edge_arrays.append(band_edges(signatures, band, band + 1))
+    for a, b in unique_edges(edge_arrays):
+        uf.union(int(a), int(b))
     return uf.clusters()
 
 
@@ -100,9 +108,8 @@ def main():
     ray.shutdown()
 
     uf = UnionFind(len(signatures))
-    for edges in edge_arrays:
-        for a, b in edges:
-            uf.union(int(a), int(b))
+    for a, b in unique_edges(edge_arrays):
+        uf.union(int(a), int(b))
     elapsed = time.perf_counter() - started
     got = uf.clusters()
     print(
