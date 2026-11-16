@@ -112,6 +112,10 @@ memory-constrained option, not a throughput option.
   as a warning, not a recommended setting.
 - A decontamination operator prototype duplicated upstream PR #1184, so it was
   not published.
+- Ray band-sharded LSH (200k signatures, 16 bands, 20k duplicate groups) matched
+  clusters but did not scale: 0.83× / 0.97× / 1.14× / 1.04× at 1/2/4/8 workers.
+  The central Python union-find over ~2.88M edges dominated; this is recorded as
+  a negative result, not a distributed-clustering success.
 
 ## Limits
 
@@ -120,12 +124,12 @@ memory-constrained option, not a throughput option.
 - "Duplicate" is defined by exact 5-gram Jaccard ≥ 0.7; there is no human
   annotation.
 - Mixing is a batch stage; the pipeline is not a distributed system.
-- The data-juicer PRs are under review, not merged.
+- Data-juicer: 17 PRs merged; #1188/#1189 are still under review.
 
 ## What I would do next
 
-1. Shard signatures and cluster by band for larger-than-memory corpora, with a
-   global union-find merge stage.
+1. Distributed union-find (BTS) or aggressive edge deduplication; naive band
+   sharding was tested and did not scale (see the failure section).
 2. Add a held-out downstream proxy (filter pass rate, token distribution) for
    mixing instead of relying only on duplicate counts.
 3. Persist dedup state for checkpoint/resume, and measure the cost of restart.

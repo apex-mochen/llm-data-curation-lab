@@ -1,0 +1,4 @@
+{'n': 200000, 'groups': 20000, 'copies': 10, 'bands': 16, 'rows': 8, 'workers': 1, 'local_seconds': 8.334, 'ray_seconds': 10.001, 'speedup_vs_local': 0.83, 'local_clusters': 20000, 'ray_clusters': 20000, 'cluster_match': True}
+{'n': 200000, 'groups': 20000, 'copies': 10, 'bands': 16, 'rows': 8, 'workers': 2, 'local_seconds': 8.384, 'ray_seconds': 8.612, 'speedup_vs_local': 0.97, 'local_clusters': 20000, 'ray_clusters': 20000, 'cluster_match': True}
+{'n': 200000, 'groups': 20000, 'copies': 10, 'bands': 16, 'rows': 8, 'workers': 4, 'local_seconds': 8.703, 'ray_seconds': 7.637, 'speedup_vs_local': 1.14, 'local_clusters': 20000, 'ray_clusters': 20000, 'cluster_match': True}
+{'n': 200000, 'groups': 20000, 'copies': 10, 'bands': 16, 'rows': 8, 'workers': 8, 'local_seconds': 8.047, 'ray_seconds': 7.729, 'speedup_vs_local': 1.04, 'local_clusters': 20000, 'ray_clusters': 20000, 'cluster_match': True}
