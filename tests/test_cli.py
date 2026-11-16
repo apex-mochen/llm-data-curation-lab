@@ -103,3 +103,36 @@ def test_cli_quality_mix_end_to_end():
     assert stats["quotas"] == [8, 2]
     assert stats["qualities"] == [1.0, 0.25]
     assert stats["beta"] == 1.0
+
+
+def test_cli_run_with_sqlite_exact_backend():
+    tmp = _tmpdir()
+    input_path = tmp / "in.jsonl"
+    output_path = tmp / "out.jsonl"
+    stats_path = tmp / "stats.json"
+    db_path = tmp / "seen.sqlite"
+    text = "alpha beta gamma delta epsilon zeta eta theta"
+    _write_jsonl(input_path, [{"id": 1, "text": text}, {"id": 2, "text": text}])
+    code = main(
+        [
+            "run",
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+            "--min-chars",
+            "10",
+            "--no-near-dedup",
+            "--exact-db",
+            str(db_path),
+            "--stats",
+            str(stats_path),
+        ]
+    )
+    assert code == 0
+    assert db_path.exists()
+    with open(stats_path, encoding="utf-8") as fin:
+        stats = json.load(fin)
+    assert stats["exact_backend"] == "sqlite"
+    assert stats["exact_duplicates"] == 1
+    assert stats["output"] == 1

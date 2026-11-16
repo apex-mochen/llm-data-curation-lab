@@ -1,6 +1,7 @@
 """Deduplication primitives: exact hashing and MinHash-LSH near dedup."""
 
-from typing import List, Set
+import sqlite3
+from typing import List, Optional, Set
 
 import numpy as np
 
@@ -9,22 +10,53 @@ from .minhash import LSH, MinHash
 
 
 class ExactDedup:
-    """Keep the first occurrence of an exact text."""
+    """Keep the first occurrence of an exact text.
 
-    def __init__(self) -> None:
+    With ``sqlite_path`` set, digests are stored in SQLite instead of an
+    in-memory set, bounding memory for larger-than-RAM corpora at the cost of
+    disk I/O.
+    """
+
+    def __init__(self, sqlite_path: Optional[str] = None) -> None:
+        self._sqlite_path = sqlite_path
+        self._conn: Optional[sqlite3.Connection] = None
         self._seen: Set[bytes] = set()
+        self._pending = 0
+        if sqlite_path is not None:
+            self._conn = sqlite3.connect(sqlite_path)
+            self._conn.execute("PRAGMA journal_mode=WAL")
+            self._conn.execute("CREATE TABLE IF NOT EXISTS seen (digest BLOB PRIMARY KEY)")
 
     @property
     def size(self) -> int:
+        if self._conn is not None:
+            return int(self._conn.execute("SELECT COUNT(*) FROM seen").fetchone()[0])
         return len(self._seen)
 
     def check_and_add(self, text: str) -> bool:
         """Return True when ``text`` was already seen."""
         digest = exact_hash(text)
+        if self._conn is not None:
+            cursor = self._conn.execute("INSERT OR IGNORE INTO seen(digest) VALUES (?)", (digest,))
+            if cursor.rowcount:
+                self._pending += 1
+                # Batch commits so per-record inserts stay cheap; close()
+                # flushes the tail.
+                if self._pending >= 1000:
+                    self._conn.commit()
+                    self._pending = 0
+                return False
+            return True
         if digest in self._seen:
             return True
         self._seen.add(digest)
         return False
+
+    def close(self) -> None:
+        if self._conn is not None:
+            self._conn.commit()
+            self._conn.close()
+            self._conn = None
 
 
 class MinHashLSHDedup:

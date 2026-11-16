@@ -20,6 +20,7 @@ class PipelineConfig:
     filters: FilterConfig = field(default_factory=FilterConfig)
     near_dedup: bool = True
     near_algo: str = "minhash"
+    exact_db: Optional[str] = None
     transitive_dedup: bool = True
     num_perm: int = 128
     bands: int = 16
@@ -75,7 +76,7 @@ def run(
     if limit is not None and limit <= 0:
         raise ValueError("limit must be positive")
 
-    exact = ExactDedup()
+    exact = ExactDedup(sqlite_path=config.exact_db)
     lsh_params = {}
     near = None
     if config.near_dedup:
@@ -181,5 +182,7 @@ def run(
     stats["docs_per_second"] = round(stats["input"] / elapsed, 1) if elapsed > 0 else 0.0
     stats["peak_rss_mb"] = round(peak[0] / 1024 / 1024, 2) if peak is not None else None
     stats["near_dedup_buckets"] = near.bucket_count if near is not None else 0
+    stats["exact_backend"] = "sqlite" if config.exact_db else "memory"
     stats["config"] = asdict(config)
+    exact.close()
     return stats

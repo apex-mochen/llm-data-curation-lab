@@ -43,7 +43,7 @@ curation_lab/
   simhash_dedup.py  pigeonhole-banded SimHash near dedup
   pipeline.py   streaming JSONL pipeline + stats
   cli.py        `curation-lab run ...` / `curation-lab mix ...`
-tests/          54 unit tests (algorithms + end-to-end pipeline)
+tests/          58 unit tests (algorithms + end-to-end pipeline)
 bench/          synthetic corpus generator + benchmark scripts
 docs/DESIGN.md  memory model, algorithm details, limitations
 ```
@@ -161,6 +161,25 @@ model.
 Quality weighting raises the filter pass rate from 92% to 97% and unique texts
 from 356 to 386 on this synthetic setup. Filter pass rate is still a proxy, not
 downstream LLM quality; it is included because it is measurable and reproducible.
+
+## Disk-backed exact dedup
+
+`--exact-db seen.sqlite` stores 128-bit exact-dedup digests in SQLite instead of
+a Python set. Semantics are unchanged (first occurrence wins); memory becomes
+bounded by SQLite's cache, at the cost of disk I/O.
+
+`bench/bench_exact_db.py`, one fresh process per run:
+
+| Rows | Backend | Time | Docs/s | Peak RSS |
+| ---: | --- | ---: | ---: | ---: |
+| 100,000 | memory | 0.090 s | 1,106,103 | 52.2 MiB |
+| 100,000 | SQLite | 1.303 s | 76,725 | 42.8 MiB |
+| 1,000,000 | memory | 1.027 s | 973,964 | 132.2 MiB |
+| 1,000,000 | SQLite | 79.504 s | 12,578 | 42.8 MiB |
+
+SQLite is the memory-constrained option, not a throughput option: at 1M rows it
+uses ~43 MiB instead of ~132 MiB but is ~77× slower. It is a single-writer local
+index, not a distributed dedup service.
 
 ## Algorithms
 
@@ -311,7 +330,7 @@ This is a synthetic, single-configuration comparison (100-token documents,
 python -m pytest tests -q
 ```
 
-`54 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
+`58 passed` locally. The suite covers MinHash estimate accuracy vs brute-force
 Jaccard, deterministic signatures, block-boundary equivalence, exact/LSH dedup,
 transitive vs first-match chain handling, SimHash fingerprints/Hamming, banded
 SimHash dedup, LSH parameter selection, filter boundaries, decontamination

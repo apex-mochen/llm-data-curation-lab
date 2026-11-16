@@ -34,6 +34,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser = sub.add_parser("run", help="run the curation pipeline on JSONL")
     run_parser.add_argument("--input", required=True)
     run_parser.add_argument("--output", required=True)
+    run_parser.add_argument("--exact-db", default=None, help="optional SQLite file for exact-dedup digests")
     run_parser.add_argument("--eval", default=None, help="optional decontamination reference JSONL")
     run_parser.add_argument("--stats", default=None, help="write stats JSON here")
     run_parser.add_argument("--limit", type=int, default=None)
@@ -97,6 +98,7 @@ def main(argv=None) -> int:
             filters=FilterConfig(min_chars=args.min_chars, max_chars=args.max_chars),
             near_dedup=not args.no_near_dedup,
             near_algo=args.near_algo,
+            exact_db=args.exact_db,
             simhash_hamming=args.simhash_hamming,
             jaccard_threshold=args.jaccard_threshold,
             decontam_ngram=args.decontam_ngram,
