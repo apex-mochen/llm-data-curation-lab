@@ -54,6 +54,8 @@ def quality_stats(text: str) -> QualityStats:
 
 
 def quality_score(stats: QualityStats, weights=None) -> float:
+    if stats.tokens == 0:
+        return 0.0
     weights = weights or DEFAULT_WEIGHTS
     return (
         weights["unique"] * stats.unique_ratio
