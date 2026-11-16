@@ -93,6 +93,16 @@ changed β=0 quotas [333,67] / 35.3 copies / 387 unique to β=1 quotas [381,19] 
 8.0 copies / 396 unique. The quality score is a synthetic proxy; the experiment
 only shows the quota mechanics, not a downstream training gain.
 
+## Decision 6: exact dedup on disk when memory is the constraint
+
+The default exact dedup keeps 128-bit digests in a Python set. For
+larger-than-RAM corpora, `--exact-db` stores them in SQLite instead, keeping the
+same first-occurrence semantics.
+
+At 1M unique rows: memory backend 1.03 s / 132.2 MiB, SQLite backend
+79.5 s / 42.8 MiB. That is ~77× slower for ~3× less memory. SQLite is the
+memory-constrained option, not a throughput option.
+
 ## What failed and was not shipped
 
 - Batching the whole minhash column in `DocumentMinhashDeduplicator.process`
